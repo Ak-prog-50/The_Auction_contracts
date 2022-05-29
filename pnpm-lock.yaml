@@ -4,9 +4,10 @@ specifiers:
   '@ethersproject/abi': ^5.0.0
   '@ethersproject/bytes': ^5.0.0
   '@ethersproject/providers': ^5.0.0
-  '@nomiclabs/hardhat-ethers': ^2.0.0
+  '@nomiclabs/hardhat-ethers': npm:hardhat-deploy-ethers@0.3.0-beta.13
   '@nomiclabs/hardhat-etherscan': ^3.0.0
   '@nomiclabs/hardhat-waffle': ^2.0.0
+  '@openzeppelin/contracts': ^4.6.0
   '@typechain/ethers-v5': ^7.0.1
   '@typechain/hardhat': ^2.3.0
   '@types/chai': ^4.2.21
@@ -24,8 +25,9 @@ specifiers:
   eslint-plugin-prettier: ^3.4.0
   eslint-plugin-promise: ^5.1.0
   ethereum-waffle: ^3.0.0
-  ethers: ^5.0.0
+  ethers: ^5.6.8
   hardhat: ^2.9.6
+  hardhat-deploy: ^0.11.10
   hardhat-gas-reporter: ^1.0.4
   lodash: ^4.17.15
   prettier: ^2.3.2
@@ -40,9 +42,10 @@ devDependencies:
   '@ethersproject/abi': 5.6.3
   '@ethersproject/bytes': 5.6.1
   '@ethersproject/providers': 5.6.8
-  '@nomiclabs/hardhat-ethers': 2.0.6_ethers@5.6.8+hardhat@2.9.6
+  '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6
   '@nomiclabs/hardhat-etherscan': 3.0.3_hardhat@2.9.6
-  '@nomiclabs/hardhat-waffle': 2.0.3_nrhuwds6i5phlteptrjzze3ray
+  '@nomiclabs/hardhat-waffle': 2.0.3_qv3mx4xdnnycjsagv7eehhyjbm
+  '@openzeppelin/contracts': 4.6.0
   '@typechain/ethers-v5': 7.2.0_svdkwroj4swt3lxlybxpxenrmm
   '@typechain/hardhat': 2.3.1_yhu2256umvu7qnwi6gaqfipdau
   '@types/chai': 4.3.1
@@ -62,6 +65,7 @@ devDependencies:
   ethereum-waffle: 3.4.4_typescript@4.7.2
   ethers: 5.6.8
   hardhat: 2.9.6_chai@4.3.6
+  hardhat-deploy: 0.11.10
   hardhat-gas-reporter: 1.0.8_hardhat@2.9.6
   lodash: 4.17.21
   prettier: 2.6.2
@@ -697,16 +701,6 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@nomiclabs/hardhat-ethers/2.0.6_ethers@5.6.8+hardhat@2.9.6:
-    resolution: {integrity: sha512-q2Cjp20IB48rEn2NPjR1qxsIQBvFVYW9rFRCFq+bC4RUrn1Ljz3g4wM8uSlgIBZYBi2JMXxmOzFqHraczxq4Ng==}
-    peerDependencies:
-      ethers: ^5.0.0
-      hardhat: ^2.0.0
-    dependencies:
-      ethers: 5.6.8
-      hardhat: 2.9.6_chai@4.3.6
-    dev: true
-
   /@nomiclabs/hardhat-etherscan/3.0.3_hardhat@2.9.6:
     resolution: {integrity: sha512-OfNtUKc/ZwzivmZnnpwWREfaYncXteKHskn3yDnz+fPBZ6wfM4GR+d5RwjREzYFWE+o5iR9ruXhWw/8fejWM9g==}
     peerDependencies:
@@ -724,7 +718,7 @@ packages:
       - supports-color
     dev: true
 
-  /@nomiclabs/hardhat-waffle/2.0.3_nrhuwds6i5phlteptrjzze3ray:
+  /@nomiclabs/hardhat-waffle/2.0.3_qv3mx4xdnnycjsagv7eehhyjbm:
     resolution: {integrity: sha512-049PHSnI1CZq6+XTbrMbMv5NaL7cednTfPenx02k3cEh8wBMLa6ys++dBETJa6JjfwgA9nBhhHQ173LJv6k2Pg==}
     peerDependencies:
       '@nomiclabs/hardhat-ethers': ^2.0.0
@@ -732,12 +726,16 @@ packages:
       ethers: ^5.0.0
       hardhat: ^2.0.0
     dependencies:
-      '@nomiclabs/hardhat-ethers': 2.0.6_ethers@5.6.8+hardhat@2.9.6
+      '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6
       '@types/sinon-chai': 3.2.8
       '@types/web3': 1.0.19
       ethereum-waffle: 3.4.4_typescript@4.7.2
       ethers: 5.6.8
       hardhat: 2.9.6_chai@4.3.6
+    dev: true
+
+  /@openzeppelin/contracts/4.6.0:
+    resolution: {integrity: sha512-8vi4d50NNya/bQqCmaVzvHNmwHvS0OBKb7HNtuNwEE3scXWrP31fKQoGxNMT+KbzmrNZzatE3QK5p2gFONI/hg==}
     dev: true
 
   /@resolver-engine/core/0.3.3:
@@ -1694,6 +1692,14 @@ packages:
 
   /aws4/1.11.0:
     resolution: {integrity: sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==}
+    dev: true
+
+  /axios/0.21.4_debug@4.3.4:
+    resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
+    dependencies:
+      follow-redirects: 1.15.1_debug@4.3.4
+    transitivePeerDependencies:
+      - debug
     dev: true
 
   /babel-code-frame/6.26.0:
@@ -3362,6 +3368,10 @@ packages:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
     dev: true
 
+  /encode-utf8/1.0.3:
+    resolution: {integrity: sha512-ucAnuBEhUK4boH2HjVYG5Q2mQyPorvv0u/ocS+zhdw0S8AlHYY+GOFhP1Gio5z4icpP2ivFSvhtFjQi8+T9ppw==}
+    dev: true
+
   /encodeurl/1.0.2:
     resolution: {integrity: sha512-TPJXq8JqFaVYm2CWmPvnP2Iyo4ZSM7/QKcSmuMLDObfpH5fi7RUGmd/rTDf+rut/saiDiQEeVTNgAmJEdAOx0w==}
     engines: {node: '>= 0.8'}
@@ -4677,6 +4687,12 @@ packages:
     resolution: {integrity: sha512-rDjbZUKpN8OYhB0IE/vY/I8UWO/602IIJEU/76Tv4LvYnwHCk0BCsvz4eRr9n+FQcri7L5cyaXOo0+/Kh4HisA==}
     dev: true
 
+  /fmix/0.1.0:
+    resolution: {integrity: sha512-Y6hyofImk9JdzU8k5INtTXX1cu8LDlePWDFU5sftm9H+zKCr5SGrVjdhkvsim646cw5zD0nADj8oHyXMZmCZ9w==}
+    dependencies:
+      imul: 1.0.1
+    dev: true
+
   /follow-redirects/1.15.1_debug@4.3.4:
     resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
     engines: {node: '>=4.0'}
@@ -4731,6 +4747,15 @@ packages:
       mime-types: 2.1.35
     dev: true
 
+  /form-data/4.0.0:
+    resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
+    engines: {node: '>= 6'}
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      mime-types: 2.1.35
+    dev: true
+
   /forwarded/0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
     engines: {node: '>= 0.6'}
@@ -4760,6 +4785,15 @@ packages:
       klaw: 1.3.1
       path-is-absolute: 1.0.1
       rimraf: 2.7.1
+    dev: true
+
+  /fs-extra/10.1.0:
+    resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      graceful-fs: 4.2.10
+      jsonfile: 6.1.0
+      universalify: 2.0.0
     dev: true
 
   /fs-extra/4.0.3:
@@ -5160,6 +5194,38 @@ packages:
       har-schema: 2.0.0
     dev: true
 
+  /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6:
+    resolution: {integrity: sha512-PdWVcKB9coqWV1L7JTpfXRCI91Cgwsm7KLmBcwZ8f0COSm1xtABHZTyz3fvF6p42cTnz1VM0QnfDvMFlIRkSNw==}
+    peerDependencies:
+      ethers: ^5.0.0
+      hardhat: ^2.0.0
+    dependencies:
+      ethers: 5.6.8
+      hardhat: 2.9.6_chai@4.3.6
+    dev: true
+
+  /hardhat-deploy/0.11.10:
+    resolution: {integrity: sha512-Iby2WhDuAdaKXFkcrMbaA9YWOgDMBnuwixCk4TfBBu8+mBGI9muYsbU/pCMkKfXA4MwSHENweJlfDMyyz7zcNA==}
+    dependencies:
+      '@types/qs': 6.9.7
+      axios: 0.21.4_debug@4.3.4
+      chalk: 4.1.2
+      chokidar: 3.5.3
+      debug: 4.3.4
+      enquirer: 2.3.6
+      ethers: 5.6.8
+      form-data: 4.0.0
+      fs-extra: 10.1.0
+      match-all: 1.2.6
+      murmur-128: 0.2.1
+      qs: 6.10.3
+      zksync-web3: 0.4.0_ethers@5.6.8
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
+
   /hardhat-gas-reporter/1.0.8_hardhat@2.9.6:
     resolution: {integrity: sha512-1G5thPnnhcwLHsFnl759f2tgElvuwdkzxlI65fC9PwxYMEe9cmjkVAAWTf3/3y8uP6ZSPiUiOW8PgZnykmZe0g==}
     peerDependencies:
@@ -5494,6 +5560,11 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
+    dev: true
+
+  /imul/1.0.1:
+    resolution: {integrity: sha1-nVhnFh6LPelsLDjV3HyxAvNeKsk=}
+    engines: {node: '>=0.10.0'}
     dev: true
 
   /imurmurhash/0.1.4:
@@ -6501,6 +6572,10 @@ packages:
     resolution: {integrity: sha512-1RUZVgQlpJSPWYbFSpmudq5nHY1doEIv89gBtF0s4gW1GF2XorxcA/70M5vq7rLv0a6mhOUccRsqkwhwLCIQ2Q==}
     dev: true
 
+  /match-all/1.2.6:
+    resolution: {integrity: sha512-0EESkXiTkWzrQQntBu2uzKvLu6vVkUGz40nGPbSZuegcfE5UuSzNjLaIu76zJWuaT/2I3Z/8M06OlUOZLGwLlQ==}
+    dev: true
+
   /mcl-wasm/0.7.9:
     resolution: {integrity: sha512-iJIUcQWA88IJB/5L15GnJVnSQJmf/YaxxV6zRavv83HILHaJQb6y0iFyDMdDO0gN8X37tdxmAOrH/P8B6RB8sQ==}
     engines: {node: '>=8.9.0'}
@@ -6885,6 +6960,14 @@ packages:
       buffer: 5.7.1
       multibase: 0.7.0
       varint: 5.0.2
+    dev: true
+
+  /murmur-128/0.2.1:
+    resolution: {integrity: sha512-WseEgiRkI6aMFBbj8Cg9yBj/y+OdipwVC7zUo3W2W1JAJITwouUOtpqsmGSg67EQmwwSyod7hsVsWY5LsrfQVg==}
+    dependencies:
+      encode-utf8: 1.0.3
+      fmix: 0.1.0
+      imul: 1.0.1
     dev: true
 
   /mute-stream/0.0.7:
@@ -10482,6 +10565,14 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+    dev: true
+
+  /zksync-web3/0.4.0_ethers@5.6.8:
+    resolution: {integrity: sha512-LmrjkQlg2YSR+P0J1NQKtkraCN2ESKfVoMxole3NxesrASQTsk6fR5+ph/8Vucq/Xh8EoAafp07+Q6TavP/TTw==}
+    peerDependencies:
+      ethers: ~5.5.0
+    dependencies:
+      ethers: 5.6.8
     dev: true
 
   github.com/ethereumjs/ethereumjs-abi/ee3994657fa7a427238e6ba92a84d0b529bbcde0:
