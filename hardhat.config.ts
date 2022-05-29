@@ -6,6 +6,8 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "hardhat-deploy";
+import "@openzeppelin/hardhat-upgrades";
 
 dotenv.config();
 
@@ -23,9 +25,27 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.4",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.9",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
+  },
   networks: {
-    ropsten: {
+    ganache: {
+      url: "HTTP://127.0.0.1:7545",
+    },
+    truffle: {
+      url: "http://localhost:24012/rpc",
+    },
+    rinkeby: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
@@ -34,9 +54,20 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
+    coinmarketcap: process.env.COIN_MARKET_CAP_API_KEY,
+    outputFile: "gas-report.txt",
+    noColors: true,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
+  },
+  mocha: {
+    timeout: 200000, // 200 seconds
   },
 };
 
