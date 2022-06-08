@@ -47,6 +47,16 @@ describe("Blind Auction Tests", function () {
         "Auction__IsNotClosed"
       );
     });
+
+    it("Should revert when NFT name doesn't match", async () => {
+      const BlindAuction = await ethers.getContractFactory("BlindAuction")
+      const AuctionNFT = await ethers.getContractFactory("AuctionNFT")
+      const auctionNFT = await AuctionNFT.deploy("VillaHouse", "VH", "https://").then(async tx => await tx.deployed())
+      const blindAuction = await BlindAuction.deploy(auctionNFT.address, "VHnotamatch").then(async tx => await tx.deployed())
+      await expect(blindAuction.startRegistering()).to.be.revertedWith(
+        "Auction__NFTNotEqual"
+      );
+    })
   });
 
 
