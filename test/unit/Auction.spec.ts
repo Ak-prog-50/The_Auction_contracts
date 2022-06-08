@@ -3,6 +3,7 @@ import { assert } from "console";
 import { deployments, ethers, getNamedAccounts } from "hardhat";
 import { Deployment } from "hardhat-deploy/types";
 import { BlindAuction } from "../../typechain";
+import { AuctionNFT } from "../../typechain"
 
 describe("Blind Auction Tests", function () {
   let auctionDepl: Deployment;
@@ -11,7 +12,7 @@ describe("Blind Auction Tests", function () {
 
   beforeEach(async () => {
     ({ deployer } = await getNamedAccounts())
-    auctionDepl = (await deployments.fixture(["auction"])).BlindAuction;
+    auctionDepl = (await deployments.fixture(["auction", "auctionNFT"])).BlindAuction;
     auction = await ethers.getContractAt("BlindAuction", auctionDepl.address);
   });
 
@@ -25,18 +26,24 @@ describe("Blind Auction Tests", function () {
     it("Should be in closed state", async () => {
       assert((await auction.s_auctionState()) === 0);
     });
+
+    it("NFT must be present and the name should be correct", async () => {
+      const auctionNFTAddr = await auction.s_auctionNFT()
+      const auctionNFT:AuctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
+      expect(await auctionNFT.name()).to.be.equal(await auction.s_NFTName())
+    })
   });
 
 
   describe("startAuction", () => {
     it("Should start the auction", async () => {
-      await auction.startAuction().then((tx) => tx.wait(1));
+      await auction.startRegistering().then((tx) => tx.wait(1));
       assert((await auction.s_auctionState()) === 1);
     });
 
     it("Should revert when the auction is not closed", async () => {
-      await auction.startAuction().then((tx) => tx.wait(1));
-      await expect(auction.startAuction()).to.be.revertedWith(
+      await auction.startRegistering().then((tx) => tx.wait(1));
+      await expect(auction.startRegistering()).to.be.revertedWith(
         "Auction__IsNotClosed"
       );
     });

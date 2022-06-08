@@ -65,6 +65,9 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
+    auctionHost: {
+      default: 1,
+    },
   },
   mocha: {
     timeout: 200000, // 200 seconds
