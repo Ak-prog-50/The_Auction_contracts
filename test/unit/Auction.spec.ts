@@ -1,21 +1,16 @@
 import { expect } from "chai";
 import { assert } from "console";
-import { watchFile } from "fs";
-import { deployments, ethers } from "hardhat";
+import { deployments, ethers, getNamedAccounts } from "hardhat";
 import { Deployment } from "hardhat-deploy/types";
 import { BlindAuction } from "../../typechain";
-
-// start auction
-// enter auction [ get a erc20 token ]
-// place the bid
-// end auction after the time frame
-// nft is sold in the auction
 
 describe("Blind Auction Tests", function () {
   let auctionDepl: Deployment;
   let auction: BlindAuction;
-  let deloyer: any;
+  let deployer: string;
+
   beforeEach(async () => {
+    ({ deployer } = await getNamedAccounts())
     auctionDepl = (await deployments.fixture(["auction"])).BlindAuction;
     auction = await ethers.getContractAt("BlindAuction", auctionDepl.address);
   });
@@ -23,13 +18,13 @@ describe("Blind Auction Tests", function () {
 
   describe("Constructor", () => {
     it("Deployer should be the owner", async () => {
-      assert(await auction.owner() === deloyer)
-    })
+      console.log(deployer, await auction.owner())
+      expect(await auction.owner()).to.be.equal(deployer);
+    });
 
     it("Should be in closed state", async () => {
       assert((await auction.s_auctionState()) === 0);
     });
-
   });
 
 
@@ -42,10 +37,16 @@ describe("Blind Auction Tests", function () {
     it("Should revert when the auction is not closed", async () => {
       await auction.startAuction().then((tx) => tx.wait(1));
       await expect(auction.startAuction()).to.be.revertedWith(
-        "Auction__AlreadyOpen"
+        "Auction__IsNotClosed"
       );
     });
   });
 
 
+  describe("enter", () => {
+    it("Should be able to enter the lottery", async () => {
+      await auction.enter().then((tx) => tx.wait(1));
+      expect(await auction.s_Bidders(0)).to.be.equal(deployer);
+    });
+  });
 });
