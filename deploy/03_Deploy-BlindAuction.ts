@@ -7,8 +7,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer, auctionHost } = await getNamedAccounts() // deployer should be the dao later
 
     const auctionNFTAddr = (await deployments.get("AuctionNFT")).address
+    const auctionTokenAddr = (await deployments.get("AuctionToken")).address
     const auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
-    const args = [auctionNFTAddr, auctionHost, await auctionNFT.name()]
+    const args = [auctionNFTAddr, auctionTokenAddr, auctionHost, await auctionNFT.name()]
 
     await deployments.deploy("BlindAuction", {
         from: deployer,

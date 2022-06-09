@@ -2,19 +2,22 @@ import { expect } from "chai";
 import { assert } from "console";
 import { deployments, ethers, getNamedAccounts } from "hardhat";
 import { Deployment } from "hardhat-deploy/types";
-import { AuctionNFT__factory, BlindAuction, BlindAuction__factory } from "../../typechain";
+import { AuctionNFT__factory, AuctionToken, BlindAuction, BlindAuction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
 
 describe("Blind Auction Tests", function () {
-  let auctionDepl: Deployment;
   let auction: BlindAuction;
+  let auctionToken: AuctionToken;
   let deployer: string;
   let auctionHost: string;
 
   beforeEach(async () => {
     ({ deployer, auctionHost } = await getNamedAccounts())
-    auctionDepl = (await deployments.fixture(["auction", "auctionNFT"])).BlindAuction;
+    await deployments.fixture(["auction", "auctionNFT", "auctionToken"])
+    const auctionDepl = await deployments.get("BlindAuction");
+    const auctionTokenDepl = await deployments.get("AuctionToken")
     auction = await ethers.getContractAt("BlindAuction", auctionDepl.address);
+    auctionToken = await ethers.getContractAt("AuctionToken", auctionTokenDepl.address)
   });
 
 
@@ -66,7 +69,7 @@ describe("Blind Auction Tests", function () {
       // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
       auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", deployer).then(async tx => await tx.deployed())
       // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
       await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
         "Auction__NFTNotMinted"
       )
@@ -76,7 +79,7 @@ describe("Blind Auction Tests", function () {
       // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
       auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", auctionHost).then(async tx => await tx.deployed())
        // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
       await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
         "Auction__NFTNotEqual"
       );
@@ -85,9 +88,16 @@ describe("Blind Auction Tests", function () {
 
 
   describe("enter", () => {
-    it("Should be able to enter the lottery", async () => {
-      await auction.enter().then((tx) => tx.wait(1));
-      expect(await auction.s_Bidders(0)).to.be.equal(deployer);
-    });
+    it("Should not be able to enter the lottery if not in the Registering state", async () => {
+      await expect(auction.enter()).to.be.revertedWith(
+        "Auction__NotRegistering"
+      )
+    })
+
+    it("Should transfer token successfully", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, 1).then(async tx => await tx.wait(1)) // performed by the dao which is the owner
+      await auction.enter().then(async tx => await tx.wait(1))
+    })
   });
 });

@@ -3,11 +3,14 @@ pragma solidity >=0.8.4 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AuctionNFT.sol";
+import "./AuctionToken.sol";
 import "hardhat/console.sol";
 
 error Auction__IsNotClosed();
 error Auction__NFTNotEqual();
 error Auction__NFTNotMinted();
+error Auction__NotRegistering();
+error Auction__TransferFailed();
 
 contract BlindAuction is Ownable {
     enum AuctionState {
@@ -19,12 +22,14 @@ contract BlindAuction is Ownable {
     
     AuctionState public s_auctionState;
     AuctionNFT public s_auctionNFT;
+    AuctionToken public s_auctionToken;
     string public s_NFTName;
     address public s_auctionHost;
     address[] public s_Bidders;
 
-    constructor(AuctionNFT _auctionNFT, address _auctionHost, string memory _NFTName) {
+    constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
+        s_auctionToken = _auctionToken;
         s_auctionHost = _auctionHost;
         s_NFTName = _NFTName; // dao should be the only one able to deploy and it should input the correct name here.
     }
@@ -38,7 +43,10 @@ contract BlindAuction is Ownable {
     }
 
     function enter() public {
-        s_Bidders.push(msg.sender);
+        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotRegistering();
+        bool success = s_auctionToken.transferToBidder(msg.sender);
+        console.log(success);
+        if (!success) revert Auction__TransferFailed();
     }
 
 
