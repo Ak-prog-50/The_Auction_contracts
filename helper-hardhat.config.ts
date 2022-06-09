@@ -85,5 +85,6 @@ export const developmentChains: string[] = ["hardhat", "localhost"]
 
 export const constants = {
   VERIFICATION_BLOCK_CONFIRMATIONS : 6,
-  ONE_AUCTION_TOKEN : ethers.BigNumber.from(10).pow(18)
+  ONE_AUCTION_TOKEN : ethers.BigNumber.from(10).pow(18),
+  MAX_TOKENS : 100,
 }
