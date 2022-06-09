@@ -1,18 +1,17 @@
-import { DeployFunction } from 'hardhat-deploy/types';
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { DeployFunction } from "hardhat-deploy/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => { 
-    const { getNamedAccounts, deployments} = hre;
-    const { auctionHost } = await getNamedAccounts()
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+  const { getNamedAccounts, deployments } = hre;
+  const { auctionHost } = await getNamedAccounts();
 
-    const args = ["The Villa House", "VH", "https://", auctionHost]
-    await deployments.deploy("AuctionNFT", {
-        from: (await getNamedAccounts()).deployer,
-        args: args,
-        log: true
-    }   
-    )
-}
+  const args = ["The Villa House", "VH", "https://", auctionHost];
+  await deployments.deploy("AuctionNFT", {
+    from: (await getNamedAccounts()).dao,
+    args: args,
+    log: true,
+  });
+};
 
 export default func;
-func.tags = ["auctionNFT"]
+func.tags = ["auctionNFT"];

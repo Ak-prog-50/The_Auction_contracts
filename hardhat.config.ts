@@ -62,7 +62,7 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   namedAccounts: {
-    deployer: {
+    dao: {
       default: 0,
     },
     auctionHost: {

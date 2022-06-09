@@ -9,8 +9,9 @@ import "hardhat/console.sol";
 error Auction__IsNotClosed();
 error Auction__NFTNotEqual();
 error Auction__NFTNotMinted();
-error Auction__NotRegistering();
+error Auction__NotInTheRegisteringState();
 error Auction__TransferFailed();
+error Auction__NoBidders();
 
 contract BlindAuction is Ownable {
     enum AuctionState {
@@ -18,14 +19,13 @@ contract BlindAuction is Ownable {
         REGISTERING, 
         OPEN 
     }
-
     
     AuctionState public s_auctionState;
     AuctionNFT public s_auctionNFT;
     AuctionToken public s_auctionToken;
     string public s_NFTName;
     address public s_auctionHost;
-    address[] public s_Bidders;
+    bool public s_Bidders;
 
     constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
@@ -43,11 +43,16 @@ contract BlindAuction is Ownable {
     }
 
     function enter() public {
-        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotRegistering();
+        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
         bool success = s_auctionToken.transferToBidder(msg.sender);
-        console.log(success);
         if (!success) revert Auction__TransferFailed();
+        if (!s_Bidders) s_Bidders = true;
     }
 
+    function openAuction() public onlyOwner {
+        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
+        if (!s_Bidders) revert Auction__NoBidders();
+        s_auctionState = AuctionState.OPEN;
+    }
 
 }

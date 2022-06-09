@@ -1,23 +1,27 @@
-import { ethers } from 'hardhat';
-import { DeployFunction } from 'hardhat-deploy/types';
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { ethers } from "hardhat";
+import { DeployFunction } from "hardhat-deploy/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => { 
-    const { getNamedAccounts, deployments} = hre;
-    const { deployer, auctionHost } = await getNamedAccounts() // deployer should be the dao later
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+  const { getNamedAccounts, deployments } = hre;
+  const { dao, auctionHost } = await getNamedAccounts(); // dao should be the dao later
 
-    const auctionNFTAddr = (await deployments.get("AuctionNFT")).address
-    const auctionTokenAddr = (await deployments.get("AuctionToken")).address
-    const auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
-    const args = [auctionNFTAddr, auctionTokenAddr, auctionHost, await auctionNFT.name()]
+  const auctionNFTAddr = (await deployments.get("AuctionNFT")).address;
+  const auctionTokenAddr = (await deployments.get("AuctionToken")).address;
+  const auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr);
+  const args = [
+    auctionNFTAddr,
+    auctionTokenAddr,
+    auctionHost,
+    await auctionNFT.name(),
+  ];
 
-    await deployments.deploy("BlindAuction", {
-        from: deployer,
-        args: args,
-        log: true
-    }   
-    )
-}
+  await deployments.deploy("BlindAuction", {
+    from: dao,
+    args: args,
+    log: true,
+  });
+};
 
 export default func;
-func.tags = ["auction"]
+func.tags = ["auction"];

@@ -1,5 +1,5 @@
 export const MIN_DELAY = 100; //100 seconds
-import { BigNumber } from "ethers"
+import { BigNumber, ethers } from "ethers"
 
 type NetworkConfigItem = {
   name: string
@@ -82,4 +82,8 @@ export const networkConfig: NetworkConfigMap = {
 }
 
 export const developmentChains: string[] = ["hardhat", "localhost"]
-export const VERIFICATION_BLOCK_CONFIRMATIONS = 6
+
+export const constants = {
+  VERIFICATION_BLOCK_CONFIRMATIONS : 6,
+  ONE_AUCTION_TOKEN : ethers.BigNumber.from(10).pow(18)
+}

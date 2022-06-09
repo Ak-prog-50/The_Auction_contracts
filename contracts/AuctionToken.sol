@@ -22,7 +22,7 @@ contract AuctionToken is ERC20, ERC20Burnable, Ownable {
      * approval has to be done by the dao
      */
     function transferToBidder(address _bidder) external returns (bool) {
-        transferFrom(owner(), _bidder, 1);
+        transferFrom(owner(), _bidder, 1 * 10**decimals());
         return true;
     }
 }
