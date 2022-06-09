@@ -7,6 +7,7 @@ import "hardhat/console.sol";
 
 error Auction__IsNotClosed();
 error Auction__NFTNotEqual();
+error Auction__NFTNotMinted();
 
 contract BlindAuction is Ownable {
     enum AuctionState {
@@ -19,16 +20,19 @@ contract BlindAuction is Ownable {
     AuctionState public s_auctionState;
     AuctionNFT public s_auctionNFT;
     string public s_NFTName;
-
+    address public s_auctionHost;
     address[] public s_Bidders;
 
-    constructor(AuctionNFT _auctionNFT, string memory _NFTName) {
+    constructor(AuctionNFT _auctionNFT, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
+        s_auctionHost = _auctionHost;
         s_NFTName = _NFTName; // dao should be the only one able to deploy and it should input the correct name here.
     }
     
     function startRegistering() public onlyOwner {
-        if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) revert Auction__NFTNotEqual();
+        if (s_auctionNFT.balanceOf(s_auctionHost) != 1) revert Auction__NFTNotMinted();
+        if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) 
+            revert Auction__NFTNotEqual();
         if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
         s_auctionState = AuctionState.REGISTERING;
     }

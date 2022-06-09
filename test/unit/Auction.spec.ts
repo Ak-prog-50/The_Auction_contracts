@@ -2,16 +2,17 @@ import { expect } from "chai";
 import { assert } from "console";
 import { deployments, ethers, getNamedAccounts } from "hardhat";
 import { Deployment } from "hardhat-deploy/types";
-import { BlindAuction } from "../../typechain";
+import { AuctionNFT__factory, BlindAuction, BlindAuction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
 
 describe("Blind Auction Tests", function () {
   let auctionDepl: Deployment;
   let auction: BlindAuction;
   let deployer: string;
+  let auctionHost: string;
 
   beforeEach(async () => {
-    ({ deployer } = await getNamedAccounts())
+    ({ deployer, auctionHost } = await getNamedAccounts())
     auctionDepl = (await deployments.fixture(["auction", "auctionNFT"])).BlindAuction;
     auction = await ethers.getContractAt("BlindAuction", auctionDepl.address);
   });
@@ -19,7 +20,6 @@ describe("Blind Auction Tests", function () {
 
   describe("Constructor", () => {
     it("Deployer should be the owner", async () => {
-      console.log(deployer, await auction.owner())
       expect(await auction.owner()).to.be.equal(deployer);
     });
 
@@ -32,10 +32,24 @@ describe("Blind Auction Tests", function () {
       const auctionNFT:AuctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
       expect(await auctionNFT.name()).to.be.equal(await auction.s_NFTName())
     })
+
+    it("NFT owner should be the auction host", async () => {
+      expect(await auction.s_auctionHost()).to.be.equal(auctionHost)
+    })
   });
 
 
   describe("startAuction", () => {
+    let BlindAuctionFactory: BlindAuction__factory;
+    let AuctionNFTFactory: AuctionNFT__factory;
+    let auctionNFTTemp: AuctionNFT;
+    let blindAuctionTemp: BlindAuction;
+
+    beforeEach(async () => {
+      BlindAuctionFactory = await ethers.getContractFactory("BlindAuction")
+      AuctionNFTFactory = await ethers.getContractFactory("AuctionNFT")      
+    })
+
     it("Should start the auction", async () => {
       await auction.startRegistering().then((tx) => tx.wait(1));
       assert((await auction.s_auctionState()) === 1);
@@ -48,12 +62,22 @@ describe("Blind Auction Tests", function () {
       );
     });
 
+    it("Should revert when NFT not minted to auctionHost", async () => {
+      // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+      auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", deployer).then(async tx => await tx.deployed())
+      // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
+        "Auction__NFTNotMinted"
+      )
+    })
+
     it("Should revert when NFT name doesn't match", async () => {
-      const BlindAuction = await ethers.getContractFactory("BlindAuction")
-      const AuctionNFT = await ethers.getContractFactory("AuctionNFT")
-      const auctionNFT = await AuctionNFT.deploy("VillaHouse", "VH", "https://").then(async tx => await tx.deployed())
-      const blindAuction = await BlindAuction.deploy(auctionNFT.address, "VHnotamatch").then(async tx => await tx.deployed())
-      await expect(blindAuction.startRegistering()).to.be.revertedWith(
+      // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+      auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", auctionHost).then(async tx => await tx.deployed())
+       // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
         "Auction__NFTNotEqual"
       );
     })

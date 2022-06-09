@@ -7,15 +7,21 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 contract AuctionNFT is ERC721, ERC721Burnable {
     string internal s_metadata;
 
-    constructor(string memory _tokenName, string memory _tokenSymbol, string memory _metadataUri) ERC721(_tokenName, _tokenSymbol) {
+    constructor(
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        string memory _metadataUri,
+        address _auctionHost
+    ) ERC721(_tokenName, _tokenSymbol) {
         s_metadata = _metadataUri;
+        _safeMint(_auctionHost, 0);
     }
 
     function _baseURI() internal view override returns (string memory) {
         return s_metadata;
     }
 
-    function getMetadataUri() public view returns(string memory) {
+    function getMetadataUri() public view returns (string memory) {
         return s_metadata;
     }
 }
