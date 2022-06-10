@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { assert } from "console";
 import { deployments, ethers, getNamedAccounts } from "hardhat";
-import { Deployment } from "hardhat-deploy/types";
 import { AuctionNFT__factory, AuctionToken, BlindAuction, BlindAuction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
 import  {constants } from "../../helper-hardhat.config"
@@ -106,10 +105,8 @@ describe("Blind Auction Tests", function () {
 
       const balance1 = await auctionToken.balanceOf(person2.address)
       const balance2 = await auctionToken.balanceOf(person1.address)
-      console.log(balance1, balance2, "balances")
-      // expect(balance1).to.be.equal(ethers.BigNumber.from(1))
-      // expect(balance2).to.be.equal(ethers.BigNumber.from(1))
-      // finish this with two addresses
+      expect(balance1).to.be.equal(ethers.BigNumber.from(ONE_AUCTION_TOKEN))
+      expect(balance2).to.be.equal(ethers.BigNumber.from(ONE_AUCTION_TOKEN))
     })
   });
 
@@ -138,4 +135,10 @@ describe("Blind Auction Tests", function () {
       expect(auctionState).to.be.equal(2)
     })
   })
+
+  describe('placeBid', () => { 
+    it("Should be able to place the bid", async () => {
+      
+    })
+   })
 });

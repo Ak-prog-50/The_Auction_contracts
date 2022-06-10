@@ -12,6 +12,8 @@ error Auction__NFTNotMinted();
 error Auction__NotInTheRegisteringState();
 error Auction__TransferFailed();
 error Auction__NoBidders();
+error Auction__NotOpen();
+error Auction__NoTokens();
 
 contract BlindAuction is Ownable {
     enum AuctionState {
@@ -20,12 +22,18 @@ contract BlindAuction is Ownable {
         OPEN 
     }
     
+    struct Bid {
+        address bidder;
+        bytes32 bid;
+    }
+
     AuctionState public s_auctionState;
     AuctionNFT public s_auctionNFT;
     AuctionToken public s_auctionToken;
     string public s_NFTName;
     address public s_auctionHost;
     bool public s_Bidders;
+    Bid[] public s_Bids;
 
     constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
@@ -53,6 +61,13 @@ contract BlindAuction is Ownable {
         if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
         if (!s_Bidders) revert Auction__NoBidders();
         s_auctionState = AuctionState.OPEN;
+    }
+
+    function placeBid() public {
+        if (s_auctionState != AuctionState.OPEN) revert Auction__NotOpen();
+        if (s_auctionToken.balanceOf(msg.sender) == 0) revert Auction__NoTokens();
+        s_Bids.push(Bid(msg.sender, "value"));  //* maybe rollups
+
     }
 
 }
