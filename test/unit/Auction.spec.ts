@@ -136,9 +136,68 @@ describe("Auction Tests", function () {
     })
   })
 
-  describe('placeBid', () => { 
-    it("Should be able to place the bid", async () => {
+  describe('placeBid', () => {
+    it("Should revert when the auction is not open", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await expect(auction.placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
+        "Auction__NotOpen"
+      )
+    })
+
+    it("Should revert when user has no tokens", async () => {
+      const [, ,tempBidder, tokenReciever] = await ethers.getSigners()
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.connect(tempBidder).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auctionToken.connect(tempBidder).transfer(tokenReciever.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+
+      await expect(auction.connect(tempBidder).placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
+        "Auction__NoTokens"
+      )
+    })
+    
+    it("Should revert in a tie bid", async () => {
+      const [,, bidder2] = await ethers.getSigners();
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.connect(bidder2).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+
+      await expect(auction.connect(bidder2).placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
+        "Auction__TieBid"
+      )
+    })
+
+    it("Should be able to place the bid and emit NewBid event", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+
+      expect((await auction.s_bids(0)).bidder).to.be.equal(dao)
+    })
+
+    it("Should emit NewHighestBid event and NewBid event", async () => {
+      const [,, bidder2] = await ethers.getSigners();
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.connect(bidder2).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
       
+      await expect(auction.placeBid(ethers.utils.parseEther("0.5"))).to.emit(
+        auction, "NewHighestBid"
+      )
+      await expect(auction.placeBid(ethers.utils.parseEther("0.4999"))).to.emit(
+        auction, "NewBid"
+      )
+      await expect(auction.connect(bidder2).placeBid(ethers.utils.parseEther("0.6"))).to.emit(
+        auction, "NewHighestBid"
+      )
     })
    })
 });
