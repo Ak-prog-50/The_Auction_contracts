@@ -15,7 +15,7 @@ error Auction__NoBidders();
 error Auction__NotOpen();
 error Auction__NoTokens();
 
-contract BlindAuction is Ownable {
+contract Auction is Ownable {
     enum AuctionState {
         CLOSED,
         REGISTERING, 

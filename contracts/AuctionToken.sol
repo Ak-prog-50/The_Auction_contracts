@@ -17,7 +17,7 @@ contract AuctionToken is ERC20, ERC20Burnable, Ownable {
     }
 
     /**
-     * @param _bidder The person who calls the enter func in BlindAuction
+     * @param _bidder The person who calls the enter func in Auction
      * owner is dao
      * approval has to be done by the dao
      */

@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import { assert } from "console";
 import { deployments, ethers, getNamedAccounts } from "hardhat";
-import { AuctionNFT__factory, AuctionToken, BlindAuction, BlindAuction__factory } from "../../typechain";
+import { AuctionNFT__factory, AuctionToken, Auction, Auction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
 import  {constants } from "../../helper-hardhat.config"
 
 const { ONE_AUCTION_TOKEN } = constants
 
-describe("Blind Auction Tests", function () {
-  let auction: BlindAuction;
+describe("Auction Tests", function () {
+  let auction: Auction;
   let auctionToken: AuctionToken;
   let dao: string;
   let auctionHost: string;
@@ -16,9 +16,9 @@ describe("Blind Auction Tests", function () {
   beforeEach(async () => {
     ({ dao, auctionHost } = await getNamedAccounts())
     await deployments.fixture(["auction", "auctionNFT", "auctionToken"])
-    const auctionDepl = await deployments.get("BlindAuction");
+    const auctionDepl = await deployments.get("Auction");
     const auctionTokenDepl = await deployments.get("AuctionToken")
-    auction = await ethers.getContractAt("BlindAuction", auctionDepl.address);
+    auction = await ethers.getContractAt("Auction", auctionDepl.address);
     auctionToken = await ethers.getContractAt("AuctionToken", auctionTokenDepl.address)
   });
 
@@ -45,13 +45,13 @@ describe("Blind Auction Tests", function () {
 
 
   describe("startAuction", () => {
-    let BlindAuctionFactory: BlindAuction__factory;
+    let AuctionFactory: Auction__factory;
     let AuctionNFTFactory: AuctionNFT__factory;
     let auctionNFTTemp: AuctionNFT;
-    let blindAuctionTemp: BlindAuction;
+    let auctionTemp: Auction;
 
     beforeEach(async () => {
-      BlindAuctionFactory = await ethers.getContractFactory("BlindAuction")
+      AuctionFactory = await ethers.getContractFactory("Auction")
       AuctionNFTFactory = await ethers.getContractFactory("AuctionNFT")      
     })
 
@@ -71,8 +71,8 @@ describe("Blind Auction Tests", function () {
       // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
       auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", dao).then(async tx => await tx.deployed())
       // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
-      await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
+      auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      await expect(auctionTemp.startRegistering()).to.be.revertedWith(
         "Auction__NFTNotMinted"
       )
     })
@@ -81,8 +81,8 @@ describe("Blind Auction Tests", function () {
       // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
       auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", auctionHost).then(async tx => await tx.deployed())
        // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      blindAuctionTemp = await BlindAuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
-      await expect(blindAuctionTemp.startRegistering()).to.be.revertedWith(
+      auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+      await expect(auctionTemp.startRegistering()).to.be.revertedWith(
         "Auction__NFTNotEqual"
       );
     })

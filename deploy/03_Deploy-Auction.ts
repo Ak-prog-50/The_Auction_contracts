@@ -16,7 +16,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await auctionNFT.name(),
   ];
 
-  await deployments.deploy("BlindAuction", {
+  await deployments.deploy("Auction", {
     from: dao,
     args: args,
     log: true,
