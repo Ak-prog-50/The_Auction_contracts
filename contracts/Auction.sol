@@ -14,6 +14,11 @@ error Auction__TransferFailed();
 error Auction__NoBidders();
 error Auction__NotOpen();
 error Auction__NoTokens();
+error Auction__TieBid();
+error Auction__ZeroBids();
+error Auction__NotYetRedeemed();
+error Auction__NotTheHighestBidder();
+error Auction__NotTheBidPrice();
 
 contract Auction is Ownable {
     enum AuctionState {
@@ -24,7 +29,12 @@ contract Auction is Ownable {
     
     struct Bid {
         address bidder;
-        bytes32 bid;
+        uint256 bid;
+    }
+
+    struct HighestBid {
+        address highestBidder;
+        uint256 highestBid;
     }
 
     AuctionState public s_auctionState;
@@ -32,8 +42,15 @@ contract Auction is Ownable {
     AuctionToken public s_auctionToken;
     string public s_NFTName;
     address public s_auctionHost;
-    bool public s_Bidders;
-    Bid[] public s_Bids;
+    uint256 internal s_timeStart;
+    Bid[] public s_bids;
+    HighestBid public s_highestBid;
+    bool public s_bidders = false;
+    uint256 public constant MAX_REDEEM_PERIOD = 1 days;
+
+    event NewHighestBid(address _bidder, uint256 indexed _bid);
+    event NewBid(address _bidder, uint256 _bid);
+    event Sold(address indexed _redeemer);
 
     constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
@@ -47,27 +64,63 @@ contract Auction is Ownable {
         if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) 
             revert Auction__NFTNotEqual();
         if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
+
+        if (block.timestamp > ( s_timeStart + MAX_REDEEM_PERIOD)) reset(); //this will be true after a one day from endAuction.
+        if (s_timeStart != 0) revert Auction__NotYetRedeemed();
         s_auctionState = AuctionState.REGISTERING;
     }
 
+    /**@notice The auction contract should be authorized by the owner of token contract (dao) before transfering the tokens.  */
     function enter() public {
         if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
         bool success = s_auctionToken.transferToBidder(msg.sender);
         if (!success) revert Auction__TransferFailed();
-        if (!s_Bidders) s_Bidders = true;
+        if (!s_bidders) s_bidders = true;
     }
 
     function openAuction() public onlyOwner {
         if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
-        if (!s_Bidders) revert Auction__NoBidders();
+        if (!s_bidders) revert Auction__NoBidders();
         s_auctionState = AuctionState.OPEN;
     }
 
-    function placeBid() public {
+    /**@param _bid: bid amount should be in wei */
+    function placeBid(uint256 _bid) public {
         if (s_auctionState != AuctionState.OPEN) revert Auction__NotOpen();
         if (s_auctionToken.balanceOf(msg.sender) == 0) revert Auction__NoTokens();
-        s_Bids.push(Bid(msg.sender, "value"));  //* maybe rollups
 
+        uint256 highestBid = s_highestBid.highestBid;
+
+        if (_bid == highestBid) revert Auction__TieBid();
+        s_bids.push(Bid(msg.sender, _bid));  //* maybe rollups
+        if (_bid > highestBid) {
+            s_highestBid = HighestBid(msg.sender, _bid);
+            emit NewHighestBid(msg.sender, _bid);
+        }
+        if (_bid < highestBid ) emit NewBid(msg.sender, _bid);    
     }
 
+    function endAuction() public onlyOwner {
+        if (s_auctionState != AuctionState.OPEN) revert Auction__NotOpen();
+        if (s_highestBid.highestBid == 0) revert Auction__ZeroBids();
+        s_timeStart = block.timestamp;
+        s_auctionState = AuctionState.CLOSED;
+    }
+
+    /**@notice Auction contract must have the approval to transfer NFT */
+    function redeem() public payable{
+        address redeemer = msg.sender;
+        if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
+        if (redeemer != s_highestBid.highestBidder) revert Auction__NotTheHighestBidder();
+        if (msg.value != s_highestBid.highestBid) revert Auction__NotTheBidPrice();
+        s_auctionNFT.safeTransferFrom(s_auctionHost, redeemer, 1);
+        emit Sold(redeemer);
+    }
+
+    function reset() internal {
+        s_timeStart = 0;
+        delete s_bids; // gas
+        s_bidders = false;
+        s_highestBid = HighestBid(address(0), 0);
+    }
 }
