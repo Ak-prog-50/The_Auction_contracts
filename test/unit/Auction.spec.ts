@@ -171,7 +171,7 @@ describe("Auction Tests", function () {
       )
     })
 
-    it("Should be able to place the bid and emit NewBid event", async () => {
+    it("Should be able to place the bid", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
       await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
@@ -200,4 +200,35 @@ describe("Auction Tests", function () {
       )
     })
    })
+
+  describe("endAuction", () => {
+    it("Should revert when Auction Is Not Open", async () => {
+      await expect(auction.endAuction()).to.be.revertedWith(
+        "Auction__NotOpen"
+      )
+    })
+    
+    it("Should revert when no bids", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+
+      await expect(auction.endAuction()).to.be.revertedWith(
+        "Auction__ZeroBids"
+      )
+    })
+
+    it("Should be able to end the auction", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+
+      await auction.endAuction().then(async tx => await tx.wait(1))
+      expect(await auction.s_auctionState()).to.be.equal(0)
+      console.log("Redeem Period Started Time", await auction.s_timeStart())
+    })
+  })
 });

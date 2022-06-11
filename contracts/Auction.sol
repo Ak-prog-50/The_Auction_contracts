@@ -43,7 +43,7 @@ contract Auction is Ownable {
     AuctionToken public s_auctionToken;
     string public s_NFTName;
     address public s_auctionHost;
-    uint256 internal s_timeStart;
+    uint256 public s_timeStart;
     Bid[] public s_bids;
     HighestBid public s_highestBid;
     bool public s_bidders = false;
