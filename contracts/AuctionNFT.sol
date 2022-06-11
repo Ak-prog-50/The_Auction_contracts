@@ -14,7 +14,7 @@ contract AuctionNFT is ERC721, ERC721Burnable {
         address _auctionHost
     ) ERC721(_tokenName, _tokenSymbol) {
         s_metadata = _metadataUri;
-        _safeMint(_auctionHost, 0);
+        _safeMint(msg.sender, 0);
     }
 
     function _baseURI() internal view override returns (string memory) {
