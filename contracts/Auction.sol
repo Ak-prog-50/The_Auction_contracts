@@ -127,7 +127,6 @@ contract Auction is Ownable {
     function reset() internal {
         if (s_timeStart == 0) revert Auction__TimeStandsStill();
         if (block.timestamp < ( s_timeStart + MAX_REDEEM_PERIOD)) revert Auction__RedeemPeriodIsNotOver();
-        console.log("reset");
         s_timeStart = 0;
         delete s_bids; // gas
         s_bidders = false;

@@ -313,7 +313,6 @@ describe("Auction Tests", function () {
       await auction.endAuction().then(async tx => await tx.wait(1))
 
       await network.provider.send("evm_increaseTime", [( 3600 * 24 ) + 1])
-      console.log(await auction.s_highestBid(), "first")
       await expect(auction.startRegistering()).to.emit(
         auction, "NewAuctionRound"
       )
