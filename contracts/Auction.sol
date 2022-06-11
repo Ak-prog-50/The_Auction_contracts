@@ -16,9 +16,10 @@ error Auction__NotOpen();
 error Auction__NoTokens();
 error Auction__TieBid();
 error Auction__ZeroBids();
-error Auction__NotYetRedeemed();
 error Auction__NotTheHighestBidder();
 error Auction__NotTheBidPrice();
+error Auction__TimeStandsStill();
+error Auction__RedeemPeriodIsNotOver();
 
 contract Auction is Ownable {
     enum AuctionState {
@@ -60,14 +61,17 @@ contract Auction is Ownable {
     }
     
     function startRegistering() public onlyOwner {
-        if (s_auctionNFT.balanceOf(s_auctionHost) != 1) revert Auction__NFTNotMinted();
-        if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) 
-            revert Auction__NFTNotEqual();
-        if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
-
-        if (block.timestamp > ( s_timeStart + MAX_REDEEM_PERIOD)) reset(); //this will be true after a one day from endAuction.
-        if (s_timeStart != 0) revert Auction__NotYetRedeemed();
-        s_auctionState = AuctionState.REGISTERING;
+        if (s_timeStart == 0) {
+            if (s_auctionNFT.balanceOf(s_auctionHost) != 1) revert Auction__NFTNotMinted();
+            if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) 
+                revert Auction__NFTNotEqual();
+            if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
+            s_auctionState = AuctionState.REGISTERING;
+        }
+        else {
+            reset();
+            startRegistering();     
+        }
     }
 
     /**@notice The auction contract should be authorized by the owner of token contract (dao) before transfering the tokens.  */
@@ -107,8 +111,10 @@ contract Auction is Ownable {
         s_auctionState = AuctionState.CLOSED;
     }
 
-    /**@notice Auction contract must have the approval to transfer NFT */
-    function redeem() public payable{
+    /** @notice Auction contract must have the approval to transfer NFT 
+        @notice User must redeem withing the time frame
+    */
+    function redeem() public payable {
         address redeemer = msg.sender;
         if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
         if (redeemer != s_highestBid.highestBidder) revert Auction__NotTheHighestBidder();
@@ -118,6 +124,9 @@ contract Auction is Ownable {
     }
 
     function reset() internal {
+        if (s_timeStart == 0) revert Auction__TimeStandsStill();
+        if (block.timestamp < ( s_timeStart + MAX_REDEEM_PERIOD)) revert Auction__RedeemPeriodIsNotOver();
+        console.log("reset");
         s_timeStart = 0;
         delete s_bids; // gas
         s_bidders = false;
