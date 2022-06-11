@@ -1,5 +1,4 @@
-import { expect } from "chai";
-import { assert } from "console";
+import { expect, assert } from "chai";
 import { deployments, ethers, getNamedAccounts, network } from "hardhat";
 import { AuctionNFT__factory, AuctionToken, Auction, Auction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
