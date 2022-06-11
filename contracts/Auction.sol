@@ -52,6 +52,7 @@ contract Auction is Ownable {
     event NewHighestBid(address _bidder, uint256 indexed _bid);
     event NewBid(address _bidder, uint256 _bid);
     event Sold(address indexed _redeemer);
+    event NewAuctionRound();
 
     constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
         s_auctionNFT = _auctionNFT;
@@ -119,7 +120,7 @@ contract Auction is Ownable {
         if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
         if (redeemer != s_highestBid.highestBidder) revert Auction__NotTheHighestBidder();
         if (msg.value != s_highestBid.highestBid) revert Auction__NotTheBidPrice();
-        s_auctionNFT.safeTransferFrom(s_auctionHost, redeemer, 1);
+        s_auctionNFT.safeTransferFrom(s_auctionHost, redeemer, 0);
         emit Sold(redeemer);
     }
 
@@ -131,5 +132,6 @@ contract Auction is Ownable {
         delete s_bids; // gas
         s_bidders = false;
         s_highestBid = HighestBid(address(0), 0);
+        emit NewAuctionRound();
     }
 }

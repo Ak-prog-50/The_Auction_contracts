@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { assert } from "console";
-import { deployments, ethers, getNamedAccounts } from "hardhat";
+import { deployments, ethers, getNamedAccounts, network } from "hardhat";
 import { AuctionNFT__factory, AuctionToken, Auction, Auction__factory } from "../../typechain";
 import { AuctionNFT } from "../../typechain"
 import  {constants } from "../../helper-hardhat.config"
@@ -10,6 +10,7 @@ const { ONE_AUCTION_TOKEN } = constants
 describe("Auction Tests", function () {
   let auction: Auction;
   let auctionToken: AuctionToken;
+  let auctionNFT: AuctionNFT;
   let dao: string;
   let auctionHost: string;
 
@@ -17,9 +18,11 @@ describe("Auction Tests", function () {
     ({ dao, auctionHost } = await getNamedAccounts())
     await deployments.fixture(["auction", "auctionNFT", "auctionToken"])
     const auctionDepl = await deployments.get("Auction");
-    const auctionTokenDepl = await deployments.get("AuctionToken")
     auction = await ethers.getContractAt("Auction", auctionDepl.address);
-    auctionToken = await ethers.getContractAt("AuctionToken", auctionTokenDepl.address)
+    const auctionTokenAddr = await auction.s_auctionToken();
+    const auctionNFTAddr = await auction.s_auctionNFT();
+    auctionToken = await ethers.getContractAt("AuctionToken", auctionTokenAddr)
+    auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
   });
 
 
@@ -33,8 +36,6 @@ describe("Auction Tests", function () {
     });
 
     it("NFT must be present and the name should be correct", async () => {
-      const auctionNFTAddr = await auction.s_auctionNFT()
-      const auctionNFT:AuctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
       expect(await auctionNFT.name()).to.be.equal(await auction.s_NFTName())
     })
 
@@ -44,7 +45,7 @@ describe("Auction Tests", function () {
   });
 
 
-  describe("startAuction", () => {
+  describe("startRegistering", () => {
     let AuctionFactory: Auction__factory;
     let AuctionNFTFactory: AuctionNFT__factory;
     let auctionNFTTemp: AuctionNFT;
@@ -228,7 +229,94 @@ describe("Auction Tests", function () {
 
       await auction.endAuction().then(async tx => await tx.wait(1))
       expect(await auction.s_auctionState()).to.be.equal(0)
-      console.log("Redeem Period Started Time", await auction.s_timeStart())
+      console.log("Redeem Period Started Time: ", (await auction.s_timeStart()).toString())
+    })
+  })
+
+  describe("redeem", () => {
+    it("Should revert when auction is not closed", async () => {
+      await auction.startRegistering().then((tx) => tx.wait(1));
+      await expect(auction.redeem()).to.be.revertedWith(
+        "Auction__IsNotClosed"
+      )
+    })
+
+    it("Should revert when not the highest bidder", async () => {
+      const [ , , fakeBidder ] = await ethers.getSigners();
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+      
+      await expect(auction.connect(fakeBidder).redeem()).to.be.revertedWith(
+        "Auction__NotTheHighestBidder"
+      )
+    })
+
+    it("Should revert when the msg.value is low", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+
+      await expect(auction.redeem({value: 1})).to.be.revertedWith(
+        "Auction__NotTheBidPrice"
+      )
+    })
+
+    it("Should succesfully redeem the nft and emit the Sold event", async () => {
+      const auctionHostSigner = await ethers.getSigner(auctionHost)
+      const bid = ethers.utils.parseEther("0.5")
+      const [ , , bidder] = await ethers.getSigners()
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.connect(bidder).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.connect(bidder).placeBid(bid).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+      
+      const approveTx = await auctionNFT.connect(auctionHostSigner).approve(auction.address, ethers.BigNumber.from(0))
+      await approveTx.wait(1) //! auctionHost must approve the dao before begin testing.
+      await expect(auction.connect(bidder).redeem({value: bid})).to.emit(
+        auction, "Sold"
+      )
+
+      expect(await auctionNFT.balanceOf(dao)).to.be.equal(0)
+      expect (await auctionNFT.balanceOf(bidder.address)).to.be.equal(1)
+    })
+  })
+
+  describe("reset", () => {
+    it("Should revert when the redeem period is not over", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+
+      await expect(auction.startRegistering()).to.be.revertedWith(
+        "Auction__RedeemPeriodIsNotOver"
+      )
+    })
+
+    it("Should reset values if the timeframe has passed", async () => {
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+
+      await network.provider.send("evm_increaseTime", [( 3600 * 24 ) + 1])
+      console.log(await auction.s_highestBid(), "first")
+      await expect(auction.startRegistering()).to.emit(
+        auction, "NewAuctionRound"
+      )
     })
   })
 });
