@@ -8,6 +8,7 @@ specifiers:
   '@nomiclabs/hardhat-etherscan': ^3.0.0
   '@nomiclabs/hardhat-waffle': ^2.0.0
   '@openzeppelin/contracts': ^4.6.0
+  '@openzeppelin/contracts-upgradeable': ^4.6.0
   '@openzeppelin/hardhat-upgrades': ^1.18.1
   '@typechain/ethers-v5': ^7.0.1
   '@typechain/hardhat': ^2.3.0
@@ -47,6 +48,7 @@ devDependencies:
   '@nomiclabs/hardhat-etherscan': 3.0.3_hardhat@2.9.6
   '@nomiclabs/hardhat-waffle': 2.0.3_nrhuwds6i5phlteptrjzze3ray
   '@openzeppelin/contracts': 4.6.0
+  '@openzeppelin/contracts-upgradeable': 4.6.0
   '@openzeppelin/hardhat-upgrades': 1.18.1_wgeewxysi2xph7e6pmnqfdy3iu
   '@typechain/ethers-v5': 7.2.0_svdkwroj4swt3lxlybxpxenrmm
   '@typechain/hardhat': 2.3.1_yhu2256umvu7qnwi6gaqfipdau
@@ -744,6 +746,10 @@ packages:
       ethereum-waffle: 3.4.4_typescript@4.7.2
       ethers: 5.6.8
       hardhat: 2.9.6_chai@4.3.6
+    dev: true
+
+  /@openzeppelin/contracts-upgradeable/4.6.0:
+    resolution: {integrity: sha512-5OnVuO4HlkjSCJO165a4i2Pu1zQGzMs//o54LPrwUgxvEO2P3ax1QuaSI0cEHHTveA77guS0PnNugpR2JMsPfA==}
     dev: true
 
   /@openzeppelin/contracts/4.6.0:
@@ -8722,7 +8728,7 @@ packages:
     dev: true
 
   /source-map/0.2.0:
-    resolution: {integrity: sha1-2rc/vPwrqBm03gO9b26qSBZLP50=}
+    resolution: {integrity: sha512-CBdZ2oa/BHhS4xj5DlhjWNHcan57/5YuvfdLf17iVmIpd9KRm+DFLmC6nBNj+6Ua7Kt3TmOjDpQT1aTYOQtoUA==}
     engines: {node: '>=0.8.0'}
     requiresBuild: true
     dependencies:
