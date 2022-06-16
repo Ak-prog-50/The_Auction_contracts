@@ -59,13 +59,14 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
         AuctionNFT _auctionNFT,
         AuctionToken _auctionToken,
         address _auctionHost,
-        string memory _NFTName
+        string memory _NFTName,
+        address _trustedForwarder
     ) {
         s_auctionNFT = _auctionNFT;
         s_auctionToken = _auctionToken;
         s_auctionHost = _auctionHost;
         s_NFTName = _NFTName; // dao should be the only one able to deploy and it should input the correct name here.
-        _setTrustedForwarder(address(0xFD4973FeB2031D4409fB57afEE5dF2051b171104)); //rinkeby trusted forwarder
+        _setTrustedForwarder(_trustedForwarder); //rinkeby trusted forwarder
     }
 
     // override required by solidity
