@@ -25,10 +25,10 @@ error Auction__RedeemPeriodIsNotOver();
 contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
     enum AuctionState {
         CLOSED,
-        REGISTERING, 
-        OPEN 
+        REGISTERING,
+        OPEN
     }
-    
+
     struct Bid {
         address bidder;
         uint256 bid;
@@ -55,37 +55,61 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
     event Sold(address indexed _redeemer);
     event NewAuctionRound();
 
-    constructor(AuctionNFT _auctionNFT, AuctionToken _auctionToken, address _auctionHost, string memory _NFTName) {
+    constructor(
+        AuctionNFT _auctionNFT,
+        AuctionToken _auctionToken,
+        address _auctionHost,
+        string memory _NFTName
+    ) {
         s_auctionNFT = _auctionNFT;
         s_auctionToken = _auctionToken;
         s_auctionHost = _auctionHost;
         s_NFTName = _NFTName; // dao should be the only one able to deploy and it should input the correct name here.
+        _setTrustedForwarder(address(0xFD4973FeB2031D4409fB57afEE5dF2051b171104)); //rinkeby trusted forwarder
     }
-    
+
+    // override required by solidity
+    function versionRecipient() external view override returns (string memory) {
+        return "1";
+    }
+
+    function _msgSender() internal override(Context, BaseRelayRecipient) view returns (address) {
+        BaseRelayRecipient._msgSender();
+    }
+
+    function _msgData() internal override(Context, BaseRelayRecipient) view returns (bytes memory) {
+        BaseRelayRecipient._msgData();
+    }
+
     function startRegistering() public onlyOwner {
         if (s_timeStart == 0) {
-            if (s_auctionNFT.balanceOf(s_auctionHost) != 1) revert Auction__NFTNotMinted();
-            if (keccak256(abi.encodePacked(s_auctionNFT.name())) != keccak256(abi.encodePacked(s_NFTName))) 
-                revert Auction__NFTNotEqual();
-            if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
+            if (s_auctionNFT.balanceOf(s_auctionHost) != 1)
+                revert Auction__NFTNotMinted();
+            if (
+                keccak256(abi.encodePacked(s_auctionNFT.name())) !=
+                keccak256(abi.encodePacked(s_NFTName))
+            ) revert Auction__NFTNotEqual();
+            if (s_auctionState != AuctionState.CLOSED)
+                revert Auction__IsNotClosed();
             s_auctionState = AuctionState.REGISTERING;
-        }
-        else {
+        } else {
             reset();
-            startRegistering();     
+            startRegistering();
         }
     }
 
     /**@notice The auction contract should be authorized by the owner of token contract (dao) before transfering the tokens.  */
     function enter() public {
-        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
-        bool success = s_auctionToken.transferToBidder(msg.sender);
+        if (s_auctionState != AuctionState.REGISTERING)
+            revert Auction__NotInTheRegisteringState();
+        bool success = s_auctionToken.transferToBidder(_msgSender());
         if (!success) revert Auction__TransferFailed();
         if (!s_bidders) s_bidders = true;
     }
 
     function openAuction() public onlyOwner {
-        if (s_auctionState != AuctionState.REGISTERING) revert Auction__NotInTheRegisteringState();
+        if (s_auctionState != AuctionState.REGISTERING)
+            revert Auction__NotInTheRegisteringState();
         if (!s_bidders) revert Auction__NoBidders();
         s_auctionState = AuctionState.OPEN;
     }
@@ -93,17 +117,18 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
     /**@param _bid: bid amount should be in wei */
     function placeBid(uint256 _bid) public {
         if (s_auctionState != AuctionState.OPEN) revert Auction__NotOpen();
-        if (s_auctionToken.balanceOf(msg.sender) == 0) revert Auction__NoTokens();
+        if (s_auctionToken.balanceOf(_msgSender()) == 0)
+            revert Auction__NoTokens();
 
         uint256 highestBid = s_highestBid.highestBid;
 
         if (_bid == highestBid) revert Auction__TieBid();
-        s_bids.push(Bid(msg.sender, _bid));  //* maybe rollups
+        s_bids.push(Bid(_msgSender(), _bid)); //* maybe rollups
         if (_bid > highestBid) {
-            s_highestBid = HighestBid(msg.sender, _bid);
-            emit NewHighestBid(msg.sender, _bid);
+            s_highestBid = HighestBid(_msgSender(), _bid);
+            emit NewHighestBid(_msgSender(), _bid);
         }
-        if (_bid < highestBid ) emit NewBid(msg.sender, _bid);    
+        if (_bid < highestBid) emit NewBid(_msgSender(), _bid);
     }
 
     function endAuction() public onlyOwner {
@@ -117,17 +142,21 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
         @notice User must redeem withing the time frame
     */
     function redeem() public payable {
-        address redeemer = msg.sender;
-        if (s_auctionState != AuctionState.CLOSED) revert Auction__IsNotClosed();
-        if (redeemer != s_highestBid.highestBidder) revert Auction__NotTheHighestBidder();
-        if (msg.value != s_highestBid.highestBid) revert Auction__NotTheBidPrice();
+        address redeemer = _msgSender();
+        if (s_auctionState != AuctionState.CLOSED)
+            revert Auction__IsNotClosed();
+        if (redeemer != s_highestBid.highestBidder)
+            revert Auction__NotTheHighestBidder();
+        if (msg.value != s_highestBid.highestBid)
+            revert Auction__NotTheBidPrice();
         s_auctionNFT.safeTransferFrom(s_auctionHost, redeemer, 0);
         emit Sold(redeemer);
     }
 
     function reset() internal {
         if (s_timeStart == 0) revert Auction__TimeStandsStill();
-        if (block.timestamp < ( s_timeStart + MAX_REDEEM_PERIOD)) revert Auction__RedeemPeriodIsNotOver();
+        if (block.timestamp < (s_timeStart + MAX_REDEEM_PERIOD))
+            revert Auction__RedeemPeriodIsNotOver();
         s_timeStart = 0;
         delete s_bids; // gas
         s_bidders = false;
