@@ -7,6 +7,7 @@ specifiers:
   '@nomiclabs/hardhat-ethers': npm:hardhat-deploy-ethers@0.3.0-beta.13
   '@nomiclabs/hardhat-etherscan': ^3.0.0
   '@nomiclabs/hardhat-waffle': ^2.0.0
+  '@opengsn/contracts': ^2.2.6
   '@openzeppelin/contracts': ^4.6.0
   '@openzeppelin/contracts-upgradeable': ^4.6.0
   '@openzeppelin/hardhat-upgrades': ^1.18.1
@@ -44,12 +45,13 @@ devDependencies:
   '@ethersproject/abi': 5.6.3
   '@ethersproject/bytes': 5.6.1
   '@ethersproject/providers': 5.6.8
-  '@nomiclabs/hardhat-ethers': 2.0.6_ethers@5.6.8+hardhat@2.9.6
+  '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6
   '@nomiclabs/hardhat-etherscan': 3.0.3_hardhat@2.9.6
-  '@nomiclabs/hardhat-waffle': 2.0.3_nrhuwds6i5phlteptrjzze3ray
+  '@nomiclabs/hardhat-waffle': 2.0.3_qv3mx4xdnnycjsagv7eehhyjbm
+  '@opengsn/contracts': 2.2.6
   '@openzeppelin/contracts': 4.6.0
   '@openzeppelin/contracts-upgradeable': 4.6.0
-  '@openzeppelin/hardhat-upgrades': 1.18.1_wgeewxysi2xph7e6pmnqfdy3iu
+  '@openzeppelin/hardhat-upgrades': 1.18.1_2pldoor6isglvuwogmsltzmn7y
   '@typechain/ethers-v5': 7.2.0_svdkwroj4swt3lxlybxpxenrmm
   '@typechain/hardhat': 2.3.1_yhu2256umvu7qnwi6gaqfipdau
   '@types/chai': 4.3.1
@@ -705,16 +707,6 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@nomiclabs/hardhat-ethers/2.0.6_ethers@5.6.8+hardhat@2.9.6:
-    resolution: {integrity: sha512-q2Cjp20IB48rEn2NPjR1qxsIQBvFVYW9rFRCFq+bC4RUrn1Ljz3g4wM8uSlgIBZYBi2JMXxmOzFqHraczxq4Ng==}
-    peerDependencies:
-      ethers: ^5.0.0
-      hardhat: ^2.0.0
-    dependencies:
-      ethers: 5.6.8
-      hardhat: 2.9.6_chai@4.3.6
-    dev: true
-
   /@nomiclabs/hardhat-etherscan/3.0.3_hardhat@2.9.6:
     resolution: {integrity: sha512-OfNtUKc/ZwzivmZnnpwWREfaYncXteKHskn3yDnz+fPBZ6wfM4GR+d5RwjREzYFWE+o5iR9ruXhWw/8fejWM9g==}
     peerDependencies:
@@ -732,7 +724,7 @@ packages:
       - supports-color
     dev: true
 
-  /@nomiclabs/hardhat-waffle/2.0.3_nrhuwds6i5phlteptrjzze3ray:
+  /@nomiclabs/hardhat-waffle/2.0.3_qv3mx4xdnnycjsagv7eehhyjbm:
     resolution: {integrity: sha512-049PHSnI1CZq6+XTbrMbMv5NaL7cednTfPenx02k3cEh8wBMLa6ys++dBETJa6JjfwgA9nBhhHQ173LJv6k2Pg==}
     peerDependencies:
       '@nomiclabs/hardhat-ethers': ^2.0.0
@@ -740,12 +732,18 @@ packages:
       ethers: ^5.0.0
       hardhat: ^2.0.0
     dependencies:
-      '@nomiclabs/hardhat-ethers': 2.0.6_ethers@5.6.8+hardhat@2.9.6
+      '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6
       '@types/sinon-chai': 3.2.8
       '@types/web3': 1.0.19
       ethereum-waffle: 3.4.4_typescript@4.7.2
       ethers: 5.6.8
       hardhat: 2.9.6_chai@4.3.6
+    dev: true
+
+  /@opengsn/contracts/2.2.6:
+    resolution: {integrity: sha512-NraQgKZZUp7/ipLzpe2wd6lqX6w5PbLtHaKOFirm+zJYeCDoG9d6xrVc2VlDwjapMTJyWlYxuXSwOZQhHEMrAg==}
+    dependencies:
+      '@openzeppelin/contracts': 4.6.0
     dev: true
 
   /@openzeppelin/contracts-upgradeable/4.6.0:
@@ -756,7 +754,7 @@ packages:
     resolution: {integrity: sha512-8vi4d50NNya/bQqCmaVzvHNmwHvS0OBKb7HNtuNwEE3scXWrP31fKQoGxNMT+KbzmrNZzatE3QK5p2gFONI/hg==}
     dev: true
 
-  /@openzeppelin/hardhat-upgrades/1.18.1_wgeewxysi2xph7e6pmnqfdy3iu:
+  /@openzeppelin/hardhat-upgrades/1.18.1_2pldoor6isglvuwogmsltzmn7y:
     resolution: {integrity: sha512-x0KzKmGWk4o5/o40MXKISS2P9ru5EePXedX0E4N4yuE/ZVdOvM8txaAdcdNniFoL4RY8Se6RdcWemZ3JTlRAEQ==}
     hasBin: true
     peerDependencies:
@@ -768,7 +766,7 @@ packages:
       '@nomiclabs/harhdat-etherscan':
         optional: true
     dependencies:
-      '@nomiclabs/hardhat-ethers': 2.0.6_ethers@5.6.8+hardhat@2.9.6
+      '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6
       '@nomiclabs/hardhat-etherscan': 3.0.3_hardhat@2.9.6
       '@openzeppelin/upgrades-core': 1.15.0
       chalk: 4.1.2
@@ -5258,6 +5256,16 @@ packages:
     dependencies:
       ajv: 6.12.6
       har-schema: 2.0.0
+    dev: true
+
+  /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.6.8+hardhat@2.9.6:
+    resolution: {integrity: sha512-PdWVcKB9coqWV1L7JTpfXRCI91Cgwsm7KLmBcwZ8f0COSm1xtABHZTyz3fvF6p42cTnz1VM0QnfDvMFlIRkSNw==}
+    peerDependencies:
+      ethers: ^5.0.0
+      hardhat: ^2.0.0
+    dependencies:
+      ethers: 5.6.8
+      hardhat: 2.9.6_chai@4.3.6
     dev: true
 
   /hardhat-deploy/0.11.10:
