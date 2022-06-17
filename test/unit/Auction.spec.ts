@@ -303,7 +303,7 @@ describe("Auction Tests", function () {
       )
     })
 
-    it("Should reset values if the timeframe has passed", async () => {
+    it("Should reset values if the timeframe has passed and not redeemed!", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
       await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
@@ -315,6 +315,8 @@ describe("Auction Tests", function () {
       await expect(auction.startRegistering()).to.emit(
         auction, "NewAuctionRound"
       )
+
+      //! This does not redeem the nft. create a new test that redeem the nft or startRegistering again only if the nft has not redeemed
     })
   })
 });

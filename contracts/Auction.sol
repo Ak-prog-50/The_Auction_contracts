@@ -134,3 +134,5 @@ contract Auction is Ownable {
         emit NewAuctionRound();
     }
 }
+
+//! remove round2 or fix errors ( change nft in constructor) or startRegistering again only if the nft has not redeemed
