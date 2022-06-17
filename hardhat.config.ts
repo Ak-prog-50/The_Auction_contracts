@@ -50,7 +50,10 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    loclhost: {
+    localhost: {
+      chainId: 1337
+    },
+    hardhat: {
       chainId: 1337
     }
   },
