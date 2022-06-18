@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
-  const { dao, auctionHost } = await getNamedAccounts(); // dao should be the dao later
+  const { auctionHost } = await getNamedAccounts();
 
   const auctionNFTAddr = (await deployments.get("AuctionNFT")).address;
   const auctionTokenAddr = (await deployments.get("AuctionToken")).address;
@@ -17,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   ];
 
   await deployments.deploy("Auction", {
-    from: dao,
+    from: auctionHost,
     args: args,
     log: true,
   });

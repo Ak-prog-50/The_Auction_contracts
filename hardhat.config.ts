@@ -68,11 +68,11 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   namedAccounts: {
-    dao: {
-      default: 0,
-    },
+    // dao: {
+    //   default: 0,
+    // },
     auctionHost: {
-      default: 1,
+      default: 0,
     },
   },
   mocha: {

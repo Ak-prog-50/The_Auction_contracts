@@ -7,7 +7,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const args = ["The Villa House", "VH", "https://", auctionHost];
   await deployments.deploy("AuctionNFT", {
-    from: (await getNamedAccounts()).dao,
+    from: (await getNamedAccounts()).auctionHost,
     args: args,
     log: true,
   });

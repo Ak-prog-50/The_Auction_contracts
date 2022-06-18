@@ -11,10 +11,10 @@ contract AuctionNFT is ERC721, ERC721Burnable {
         string memory _tokenName,
         string memory _tokenSymbol,
         string memory _metadataUri,
-        address _auctionHost
+        address _auctionHost // deploy using a dao address ( optional )
     ) ERC721(_tokenName, _tokenSymbol) {
         s_metadata = _metadataUri;
-        _safeMint(_auctionHost, 0);
+        _safeMint(msg.sender, 0);
     }
 
     function _baseURI() internal view override returns (string memory) {

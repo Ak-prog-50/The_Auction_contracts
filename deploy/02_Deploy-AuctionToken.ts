@@ -6,11 +6,11 @@ const { MAX_TOKENS } = constants;
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
-  const { dao, auctionHost } = await getNamedAccounts();
+  const { auctionHost } = await getNamedAccounts();
 
   const args = ["villacoin", "vic", MAX_TOKENS, auctionHost];
   await deployments.deploy("AuctionToken", {
-    from: dao,
+    from: auctionHost,
     args: args,
     log: true,
   });
