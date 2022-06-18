@@ -10,11 +10,10 @@ describe("Auction Tests", function () {
   let auction: Auction;
   let auctionToken: AuctionToken;
   let auctionNFT: AuctionNFT;
-  let dao: string;
   let auctionHost: string;
 
   beforeEach(async () => {
-    ({ dao, auctionHost } = await getNamedAccounts())
+    ({ auctionHost } = await getNamedAccounts())
     await deployments.fixture(["auction", "auctionNFT", "auctionToken"])
     const auctionDepl = await deployments.get("Auction");
     auction = await ethers.getContractAt("Auction", auctionDepl.address);
@@ -27,7 +26,7 @@ describe("Auction Tests", function () {
 
   describe("Constructor", () => {
     it("Dao should be the owner", async () => {
-      expect(await auction.owner()).to.be.equal(dao);
+      expect(await auction.owner()).to.be.equal(auctionHost);
     });
 
     it("Should be in closed state", async () => {
@@ -67,15 +66,17 @@ describe("Auction Tests", function () {
       );
     });
 
-    it("Should revert when NFT not minted to auctionHost", async () => {
-      // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", dao).then(async tx => await tx.deployed())
-      // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-      auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
-      await expect(auctionTemp.startRegistering()).to.be.revertedWith(
-        "Auction__NFTNotMinted"
-      )
-    })
+    //* run this only if the NFT not minted to deployer by default.
+    // it("Should revert when NFT not minted to auctionHost", async () => {
+    //   const [, , , randomPerson] = await ethers.getSigners();
+    //   // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+    //   auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", randomPerson).then(async tx => await tx.deployed())
+    //   // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+    //   auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+    //   await expect(auctionTemp.startRegistering()).to.be.revertedWith(
+    //     "Auction__NFTNotMinted"
+    //   )
+    // })
 
     it("Should revert when NFT name doesn't match", async () => {
       // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
@@ -99,7 +100,7 @@ describe("Auction Tests", function () {
     it("Should be able to enter and transfer token successfully", async () => {
       const [ , , person1, person2] = await ethers.getSigners()
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1)) // performed by the dao which is the owner
+      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1)) // performed by the dao (owner) or the deployer
       await auction.connect(person2).enter().then(async tx => await tx.wait(1))
       await auction.connect(person1).enter().then(async tx => await tx.wait(1))
 
@@ -178,7 +179,7 @@ describe("Auction Tests", function () {
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
 
-      expect((await auction.s_bids(0)).bidder).to.be.equal(dao)
+      expect((await auction.s_bids(0)).bidder).to.be.equal(auctionHost)
     })
 
     it("Should emit NewHighestBid event and NewBid event", async () => {
@@ -279,12 +280,12 @@ describe("Auction Tests", function () {
       await auction.endAuction().then(async tx => await tx.wait(1))
       
       const approveTx = await auctionNFT.connect(auctionHostSigner).approve(auction.address, ethers.BigNumber.from(0))
-      await approveTx.wait(1) //! auctionHost must approve the dao before begin testing.
+      await approveTx.wait(1) //! auctionHost must approve the dao before begin testing. (if deployed by a dao)
       await expect(auction.connect(bidder).redeem({value: bid})).to.emit(
         auction, "Sold"
       )
 
-      expect(await auctionNFT.balanceOf(dao)).to.be.equal(0)
+      expect(await auctionNFT.balanceOf(auctionHost)).to.be.equal(0)
       expect (await auctionNFT.balanceOf(bidder.address)).to.be.equal(1)
     })
   })
