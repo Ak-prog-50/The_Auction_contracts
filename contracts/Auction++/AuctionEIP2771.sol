@@ -21,6 +21,7 @@ error Auction__NotTheHighestBidder();
 error Auction__NotTheBidPrice();
 error Auction__TimeStandsStill();
 error Auction__RedeemPeriodIsNotOver();
+error Auction__NotAllowedToBurn();
 
 contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
     enum AuctionState {
@@ -121,6 +122,8 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
         if (s_auctionToken.balanceOf(_msgSender()) == 0)
             revert Auction__NoTokens();
 
+        uint256 allowance = s_auctionToken.allowance(msg.sender, address(this));
+        if (allowance <= 0) revert Auction__NotAllowedToBurn();
         uint256 highestBid = s_highestBid.highestBid;
 
         if (_bid == highestBid) revert Auction__TieBid();
@@ -130,8 +133,10 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
             emit NewHighestBid(_msgSender(), _bid);
         }
         if (_bid < highestBid) emit NewBid(_msgSender(), _bid);
+
         uint8 decimals = s_auctionToken.decimals();
-        s_auctionToken.burnFrom(msg.sender, 1 * 10**decimals); 
+        uint256 oneToken = 1 * 10**decimals;
+        s_auctionToken.burnFrom(msg.sender, oneToken); 
     }
 
     function endAuction() public onlyOwner {

@@ -21,6 +21,7 @@ describe("AuctionEIP2771 Tests", function () {
     const auctionNFTAddr = await auction.s_auctionNFT();
     auctionToken = await ethers.getContractAt("AuctionToken", auctionTokenAddr)
     auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr)
+    await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(MAX_TOKENS)).then(async tx => await tx.wait(1))
   });
 
 
@@ -100,7 +101,6 @@ describe("AuctionEIP2771 Tests", function () {
     it("Should be able to enter and transfer token successfully", async () => {
       const [ , , person1, person2] = await ethers.getSigners()
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1)) // performed by the dao (owner) or the deployer
       await auction.connect(person2).enter().then(async tx => await tx.wait(1))
       await auction.connect(person1).enter().then(async tx => await tx.wait(1))
 
@@ -128,7 +128,6 @@ describe("AuctionEIP2771 Tests", function () {
 
     it("Should be able to open the auction", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
 
       await auction.openAuction().then(async tx => await tx.wait(1))
@@ -148,7 +147,6 @@ describe("AuctionEIP2771 Tests", function () {
     it("Should revert when user has no tokens", async () => {
       const [, ,tempBidder, tokenReciever] = await ethers.getSigners()
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await auction.connect(tempBidder).enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auctionToken.connect(tempBidder).transfer(tokenReciever.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
@@ -161,12 +159,12 @@ describe("AuctionEIP2771 Tests", function () {
     it("Should revert in a tie bid", async () => {
       const [,, bidder2] = await ethers.getSigners();
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(4)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.connect(bidder2).enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
 
+      await auctionToken.connect(bidder2).increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await expect(auction.connect(bidder2).placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
         "Auction__TieBid"
       )
@@ -174,7 +172,6 @@ describe("AuctionEIP2771 Tests", function () {
 
     it("Should be able to place the bid", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
@@ -185,11 +182,11 @@ describe("AuctionEIP2771 Tests", function () {
     it("Should emit NewHighestBid event and NewBid event and burn tokens", async () => {
       const [,, bidder2] = await ethers.getSigners();
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(4)).then(async tx => await tx.wait(1)) // transfer token from host to bidder when entering
-      await auctionToken.connect(bidder2).increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(1)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1)) // auctionHost doesn't have to enter. since he has tokens
       await auction.connect(bidder2).enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
+
+      await auctionToken.connect(bidder2).increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
 
       expect (await auctionToken.balanceOf(auctionHost)).to.be.equal(ONE_AUCTION_TOKEN.mul(MAX_TOKENS - 1))
       expect (await auctionToken.balanceOf(bidder2.address)).to.be.equal(ONE_AUCTION_TOKEN)
@@ -219,7 +216,6 @@ describe("AuctionEIP2771 Tests", function () {
     
     it("Should revert when no bids", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
 
@@ -230,7 +226,6 @@ describe("AuctionEIP2771 Tests", function () {
 
     it("Should be able to end the auction", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
@@ -252,7 +247,6 @@ describe("AuctionEIP2771 Tests", function () {
     it("Should revert when not the highest bidder", async () => {
       const [ , , fakeBidder ] = await ethers.getSigners();
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
@@ -265,7 +259,6 @@ describe("AuctionEIP2771 Tests", function () {
 
     it("Should revert when the msg.value is low", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
@@ -282,8 +275,7 @@ describe("AuctionEIP2771 Tests", function () {
       const [ , , bidder] = await ethers.getSigners()
 
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(1)).then(async tx => await tx.wait(1)) // transfer token from host to bidder when entering
-      await auctionToken.connect(bidder).increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(1)).then(async tx => await tx.wait(1))
+      await auctionToken.connect(bidder).increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
       
       await auction.connect(bidder).enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
@@ -304,7 +296,6 @@ describe("AuctionEIP2771 Tests", function () {
   describe("reset", () => {
     it("Should revert when the redeem period is not over", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
@@ -317,7 +308,6 @@ describe("AuctionEIP2771 Tests", function () {
 
     it("Should reset values if the timeframe has passed and not redeemed!", async () => {
       await auction.startRegistering().then(async tx => await tx.wait(1))
-      await auctionToken.increaseAllowance(auction.address, ONE_AUCTION_TOKEN.mul(2)).then(async tx => await tx.wait(1))
       await auction.enter().then(async tx => await tx.wait(1))
       await auction.openAuction().then(async tx => await tx.wait(1))
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
