@@ -102,7 +102,9 @@ contract Auction is Ownable {
             s_highestBid = HighestBid(msg.sender, _bid);
             emit NewHighestBid(msg.sender, _bid);
         }
-        if (_bid < highestBid ) emit NewBid(msg.sender, _bid);    
+        if (_bid < highestBid ) emit NewBid(msg.sender, _bid);
+        uint8 decimals = s_auctionToken.decimals();
+        s_auctionToken.burnFrom(msg.sender, 1 * 10**decimals);  
     }
 
     function endAuction() public onlyOwner {
