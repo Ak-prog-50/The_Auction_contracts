@@ -130,6 +130,8 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
             emit NewHighestBid(_msgSender(), _bid);
         }
         if (_bid < highestBid) emit NewBid(_msgSender(), _bid);
+        uint8 decimals = s_auctionToken.decimals();
+        s_auctionToken.burnFrom(msg.sender, 1 * 10**decimals); 
     }
 
     function endAuction() public onlyOwner {
