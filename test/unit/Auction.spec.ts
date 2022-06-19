@@ -4,7 +4,7 @@ import { AuctionNFT__factory, AuctionToken, Auction, Auction__factory } from "..
 import { AuctionNFT } from "../../typechain"
 import  {constants } from "../../helper-hardhat.config"
 
-const { ONE_AUCTION_TOKEN, MAX_TOKENS } = constants
+const { ONE_AUCTION_TOKEN, MAX_TOKENS, MAX_REDEEM_PERIOD } = constants
 
 describe("Auction Tests", function () {
   let auction: Auction;
@@ -88,6 +88,29 @@ describe("Auction Tests", function () {
         "Auction__NFTNotEqual"
       );
     })
+
+    it("Should revert when trying to startAuction after NFT has been sold!", async () => {
+      const [, , bidder] = await ethers.getSigners()
+      const auctionHostSigner = await ethers.getSigner(auctionHost)
+      const bidPrice = ethers.utils.parseEther("0.5")
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auction.connect(bidder).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+      
+      await auctionToken.connect(bidder).increaseAllowance(auction.address, ONE_AUCTION_TOKEN).then(async tx => await tx.wait(1))
+      await auction.connect(bidder).placeBid(bidPrice).then(async tx => await tx.wait(1))
+      await auction.endAuction().then(async tx => await tx.wait(1))
+      
+      const approveTx = await auctionNFT.connect(auctionHostSigner).approve(auction.address, ethers.BigNumber.from(0))
+      await approveTx.wait(1)
+      await auction.connect(bidder).redeem({value: bidPrice}).then(async tx => await tx.wait(1))
+
+      await network.provider.send("evm_increaseTime", [MAX_REDEEM_PERIOD + 1])
+      await expect(auction.startRegistering()).to.be.revertedWith(
+       "Auction__NFTNotMinted"
+      )
+    })
+
   });
 
 
@@ -153,6 +176,17 @@ describe("Auction Tests", function () {
 
       await expect(auction.connect(tempBidder).placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
         "Auction__NoTokens"
+      )
+    })
+
+    it("Should revert if not allowed to burn", async () => {
+      const [,, bidder2] = await ethers.getSigners();
+      await auction.startRegistering().then(async tx => await tx.wait(1))
+      await auction.connect(bidder2).enter().then(async tx => await tx.wait(1))
+      await auction.openAuction().then(async tx => await tx.wait(1))
+
+      await expect(auction.connect(bidder2).placeBid(ethers.utils.parseEther("0.5"))).to.be.revertedWith(
+        "Auction__NotAllowedToBurn"
       )
     })
     
@@ -313,12 +347,10 @@ describe("Auction Tests", function () {
       await auction.placeBid(ethers.utils.parseEther("0.5")).then(async tx => await tx.wait(1))
       await auction.endAuction().then(async tx => await tx.wait(1))
 
-      await network.provider.send("evm_increaseTime", [( 3600 * 24 ) + 1])
+      await network.provider.send("evm_increaseTime", [MAX_REDEEM_PERIOD + 1])
       await expect(auction.startRegistering()).to.emit(
         auction, "NewAuctionRound"
       )
-
-      //! This does not redeem the nft. create a new test that redeem the nft or startRegistering again only if the nft has not redeemed
     })
   })
 });
