@@ -4,6 +4,7 @@ pragma solidity >=0.8.4 <0.9.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AuctionNFT.sol";
 import "./AuctionToken.sol";
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import "hardhat/console.sol";
 
 error Auction__IsNotClosed();
@@ -22,7 +23,7 @@ error Auction__TimeStandsStill();
 error Auction__RedeemPeriodIsNotOver();
 error Auction__NotAllowedToBurn();
 
-contract Auction is Ownable {
+contract Auction is Ownable, ReentrancyGuard {
     enum AuctionState {
         CLOSED,
         REGISTERING, 
@@ -140,5 +141,10 @@ contract Auction is Ownable {
         s_bidders = false;
         s_highestBid = HighestBid(address(0), 0);
         emit NewAuctionRound();
+    }
+
+    function withdraw() public onlyOwner nonReentrant {
+        (bool os, ) = payable(owner()).call{value: address(this).balance}('');
+        require(os);
     }
 }

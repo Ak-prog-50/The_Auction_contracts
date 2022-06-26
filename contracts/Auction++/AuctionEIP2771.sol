@@ -3,6 +3,7 @@ pragma solidity >=0.8.4 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@opengsn/contracts/src/BaseRelayRecipient.sol";
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import "../AuctionNFT.sol";
 import "../AuctionToken.sol";
 import "hardhat/console.sol";
@@ -23,7 +24,7 @@ error Auction__TimeStandsStill();
 error Auction__RedeemPeriodIsNotOver();
 error Auction__NotAllowedToBurn();
 
-contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
+contract AuctionEIP2771 is Ownable, BaseRelayRecipient, ReentrancyGuard {
     enum AuctionState {
         CLOSED,
         REGISTERING,
@@ -171,5 +172,10 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
         s_bidders = false;
         s_highestBid = HighestBid(address(0), 0);
         emit NewAuctionRound();
+    }
+
+    function withdraw() public onlyOwner nonReentrant {
+        (bool os, ) = payable(owner()).call{value: address(this).balance}('');
+        require(os);
     }
 }
