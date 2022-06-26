@@ -70,7 +70,7 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
         _setTrustedForwarder(_trustedForwarder); //rinkeby trusted forwarder
     }
 
-    // override required by solidity
+    // overrides required by solidity : start
     function versionRecipient() external view override returns (string memory) {
         return "1";
     }
@@ -82,6 +82,7 @@ contract AuctionEIP2771 is Ownable, BaseRelayRecipient {
     function _msgData() internal override(Context, BaseRelayRecipient) view returns (bytes memory) {
         BaseRelayRecipient._msgData();
     }
+    // overrides required by solidity : end
 
     function startRegistering() public onlyOwner {
         if (s_timeStart == 0) {
