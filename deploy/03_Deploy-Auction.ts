@@ -1,6 +1,10 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { verify } from "../helper-functions";
+import { constants, developmentChains } from "../helper-hardhat.config";
+
+const { VERIFICATION_BLOCK_CONFIRMATIONS } = constants
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
@@ -16,11 +20,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await auctionNFT.name(),
   ];
 
-  await deployments.deploy("Auction", {
+  const waitBlockConfirmations = developmentChains.includes(network.name)
+  ? 1
+  : VERIFICATION_BLOCK_CONFIRMATIONS;
+
+  const auction = await deployments.deploy("Auction", {
     from: auctionHost,
     args: args,
     log: true,
+    waitConfirmations: waitBlockConfirmations,
   });
+
+  if (
+    !developmentChains.includes(network.name) &&
+    process.env.ETHERSCAN_API_KEY
+  ) {
+    deployments.log("Verifying...");
+    await verify(auction.address, args, "contracts/Auction.sol:Auction");
+  }
 };
 
 export default func;
