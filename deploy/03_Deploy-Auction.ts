@@ -4,14 +4,14 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { verify } from "../helper-functions";
 import { constants, developmentChains } from "../helper-hardhat.config";
 
-const { VERIFICATION_BLOCK_CONFIRMATIONS } = constants
+const { VERIFICATION_BLOCK_CONFIRMATIONS, NFT_ADDR, TOKEN_ADDR } = constants
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
   const { auctionHost } = await getNamedAccounts();
 
-  const auctionNFTAddr = (await deployments.get("AuctionNFT")).address;
-  const auctionTokenAddr = (await deployments.get("AuctionToken")).address;
+  const auctionNFTAddr = NFT_ADDR || (await deployments.get("AuctionNFT")).address;
+  const auctionTokenAddr = TOKEN_ADDR || (await deployments.get("AuctionToken")).address;
   const auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr);
   const args = [
     auctionNFTAddr,
