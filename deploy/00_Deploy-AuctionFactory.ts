@@ -1,25 +1,20 @@
+import { deployments, getNamedAccounts, network } from "hardhat";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { verify } from "../helper-functions";
 import { constants, developmentChains } from "../helper-hardhat.config";
-import { network } from "hardhat";
-import { verify } from "../helper-functions"
 
 const { VERIFICATION_BLOCK_CONFIRMATIONS } = constants;
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-  const { getNamedAccounts, deployments } = hre;
-  const { auctionHost } = await getNamedAccounts();
-
   const waitBlockConfirmations = developmentChains.includes(network.name)
     ? 1
     : VERIFICATION_BLOCK_CONFIRMATIONS;
 
-  const args = ["The Villa House", "VH", "ipfs://"];
-  const auctionNFT = await deployments.deploy("AuctionNFT", {
-    from: (await getNamedAccounts()).auctionHost,
-    args: args,
+  const auctionFactoryContract = await deployments.deploy("AuctionFactory", {
+    from: (await getNamedAccounts()).factoryContractDeployer,
     log: true,
-    waitConfirmations: waitBlockConfirmations
+    waitConfirmations: waitBlockConfirmations,
   });
 
   if (
@@ -27,9 +22,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     process.env.ETHERSCAN_API_KEY
   ) {
     deployments.log("Verifying...");
-    await verify(auctionNFT.address, args, "contracts/AuctionNFT.sol:AuctionNFT");
+    await verify(
+      auctionFactoryContract.address,
+      [],
+      "contracts/AuctionFactory.sol:AuctionFactory"
+    );
   }
 };
 
 export default func;
-func.tags = ["auctionNFT"];
+func.tags = ["auctionFactoryContract"];

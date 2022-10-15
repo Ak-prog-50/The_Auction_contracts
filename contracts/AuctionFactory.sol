@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.4 <0.9.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AuctionNFT.sol";
 import "./AuctionToken.sol";
 import "./Auction.sol";
 
 error AuctionFactory__NameAlreadyTaken();
 
-contract AuctionFactory is Ownable {
+contract AuctionFactory {
     struct AuctionInfo {
+        address auctionCreator;
         Auction auction;
         AuctionNFT auctionNFT;
         AuctionToken auctionToken;
     }
     AuctionInfo[] public s_auctions;
-    mapping(bytes32 => AuctionInfo) public s_auctionsMapped;
+    mapping(bytes32 => AuctionInfo) public s_auctionsMappedByName;
+    mapping(address => bytes32[]) public s_auctionNamesByAddress;
     mapping(bytes32 => bool) public s_auctionNameTaken;
 
     event AuctionCreated(
@@ -26,32 +27,54 @@ contract AuctionFactory is Ownable {
     function createAuction(
         string memory _auctionName,
         string memory _NFTName,
-        string memory _NFTSymbol,
-        string memory _metadataUri,
+        address _nftAddress,
         string memory _coinName,
         string memory _coinSymbol,
         uint256 _coinMaxTokens
-    ) public onlyOwner {
+    ) public {
+        address auctionCreator = msg.sender;
         bytes32 auctionName = keccak256(abi.encodePacked(_auctionName));
         if (s_auctionNameTaken[auctionName]) {
             revert AuctionFactory__NameAlreadyTaken();
         }
-        AuctionNFT auctionNFT = new AuctionNFT(_NFTName, _NFTSymbol, _metadataUri);
-        AuctionToken auctionToken = new AuctionToken(_coinName, _coinSymbol, _coinMaxTokens);
+        AuctionNFT auctionNFT = AuctionNFT(_nftAddress);
+        AuctionToken auctionToken = new AuctionToken(
+            _coinName,
+            _coinSymbol,
+            _coinMaxTokens
+        );
         Auction auction = new Auction(
+            _auctionName,
             auctionNFT,
             auctionToken,
-            _msgSender(),
+            auctionCreator,
             _NFTName
         );
         AuctionInfo memory auctionInfo = AuctionInfo(
+            auctionCreator,
             auction,
             auctionNFT,
             auctionToken
         );
         s_auctions.push(auctionInfo);
-        s_auctionsMapped[auctionName] = auctionInfo;
+        s_auctionsMappedByName[auctionName] = auctionInfo;
+        s_auctionNamesByAddress[auctionCreator].push(auctionName);
         s_auctionNameTaken[auctionName] = true;
         emit AuctionCreated(auctionName, auctionInfo);
+    }
+
+    function getAuctionsByAddress(address _address)
+        public
+        view
+        returns (AuctionInfo[] memory)
+    {
+        bytes32[] memory auctionNames = s_auctionNamesByAddress[_address];
+        AuctionInfo[] memory auctions = new AuctionInfo[](
+            auctionNames.length
+        );
+        for (uint256 i = 0; i < auctionNames.length; i++) {
+            auctions[i] = s_auctionsMappedByName[auctionNames[i]];
+        }
+        return auctions;
     }
 }

@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
       url: "HTTP://127.0.0.1:7545",
     },
     truffle: {
-      url: "http://localhost:24012/rpc",
+      url: "http://localhost:24012/rpc"
     },
     rinkeby: {
       url: process.env.ROPSTEN_URL || "",
@@ -65,7 +65,12 @@ const config: HardhatUserConfig = {
     noColors: true,
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+    },
   },
   namedAccounts: {
     // dao: {
@@ -74,6 +79,10 @@ const config: HardhatUserConfig = {
     auctionHost: {
       default: 0,
     },
+    factoryContractDeployer: {
+      default: 1,
+      truffle: 0
+    }
   },
   mocha: {
     timeout: 200000, // 200 seconds
