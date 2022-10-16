@@ -71,22 +71,22 @@ const { ONE_AUCTION_TOKEN, MAX_TOKENS, MAX_REDEEM_PERIOD } = constants
         });
 
         //* run this only if the NFT not minted to deployer by default.
-        // it("Should revert when NFT not minted to auctionHost", async () => {
-        //   const [, , , randomPerson] = await ethers.getSigners();
-        //   // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-        //   auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", randomPerson).then(async tx => await tx.deployed())
-        //   // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-        //   auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
-        //   await expect(auctionTemp.startRegistering()).to.be.revertedWith(
-        //     "Auction__NFTNotMinted"
-        //   )
-        // })
+        it("Should revert when NFT not minted to auctionHost", async () => {
+          const [, , , randomPerson] = await ethers.getSigners();
+          // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+          auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", randomPerson.address).then(async tx => await tx.deployed())
+          // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
+          auctionTemp = await AuctionFactory.deploy("Vh auction name", auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+          await expect(auctionTemp.startRegistering()).to.be.revertedWith(
+            "Auction__NFTNotMinted"
+          )
+        })
 
         it("Should revert when NFT name doesn't match", async () => {
           // @ts-ignore: Type 'string' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
           auctionNFTTemp = await AuctionNFTFactory.deploy("VillaHouse", "VH", "https://", auctionHost).then(async tx => await tx.deployed())
           // @ts-ignore: Type '"VHnotamatch"' has no properties in common with type 'Overrides & { from?: string | Promise<string> | undefined; }'.ts(2559)
-          auctionTemp = await AuctionFactory.deploy(auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
+          auctionTemp = await AuctionFactory.deploy("Vh auction name", auctionNFTTemp.address, ethers.constants.AddressZero, auctionHost, "VHnotamatch").then(async tx => await tx.deployed())
           await expect(auctionTemp.startRegistering()).to.be.revertedWith(
             "Auction__NFTNotEqual"
           );

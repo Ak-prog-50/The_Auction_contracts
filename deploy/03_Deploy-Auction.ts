@@ -14,6 +14,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const auctionTokenAddr = TOKEN_ADDR || (await deployments.get("AuctionToken")).address;
   const auctionNFT = await ethers.getContractAt("AuctionNFT", auctionNFTAddr);
   const args = [
+    `${await auctionNFT.name()} Auction`,
     auctionNFTAddr,
     auctionTokenAddr,
     auctionHost,

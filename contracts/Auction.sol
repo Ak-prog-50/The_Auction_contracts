@@ -69,6 +69,7 @@ contract Auction is Ownable, ReentrancyGuard {
         s_auctionToken = _auctionToken;
         s_auctionHost = _auctionHost;
         s_NFTName = _NFTName; // dao should be the only one able to deploy and it should input the correct name here.
+        Ownable.transferOwnership(_auctionHost);
     }
 
     function startRegistering() public onlyOwner {

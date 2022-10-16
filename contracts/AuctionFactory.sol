@@ -41,7 +41,8 @@ contract AuctionFactory {
         AuctionToken auctionToken = new AuctionToken(
             _coinName,
             _coinSymbol,
-            _coinMaxTokens
+            _coinMaxTokens,
+            auctionCreator
         );
         Auction auction = new Auction(
             _auctionName,
@@ -76,5 +77,9 @@ contract AuctionFactory {
             auctions[i] = s_auctionsMappedByName[auctionNames[i]];
         }
         return auctions;
+    }
+
+    function getAuctionsCount() public view returns (uint256) {
+        return s_auctions.length;
     }
 }

@@ -9,12 +9,13 @@ const { VERIFICATION_BLOCK_CONFIRMATIONS } = constants;
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getNamedAccounts, deployments } = hre;
   const { auctionHost } = await getNamedAccounts();
+  console.log("auctionHost: ", auctionHost);
 
   const waitBlockConfirmations = developmentChains.includes(network.name)
     ? 1
     : VERIFICATION_BLOCK_CONFIRMATIONS;
 
-  const args = ["The Villa House", "VH", "ipfs://"];
+  const args = ["The Villa House", "VH", "ipfs://", auctionHost];
   const auctionNFT = await deployments.deploy("AuctionNFT", {
     from: (await getNamedAccounts()).auctionHost,
     args: args,
