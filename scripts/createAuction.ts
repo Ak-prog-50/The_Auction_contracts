@@ -17,7 +17,7 @@ const createAuction = async () => {
       "VC",
       1000
     )
-    .then(async (tx) => await tx.wait(5));
+    .then(async (tx) => await tx.wait(6));
   console.log("Auction Created!");
   if (
     !developmentChains.includes(network.name) &&

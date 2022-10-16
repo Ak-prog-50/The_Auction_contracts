@@ -14,6 +14,7 @@ contract AuctionToken is ERC20, ERC20Burnable, Ownable {
         address _auctionHost 
     ) ERC20(_tokenName, _symbol) {
         _mint(_auctionHost, _maxTokens * 10**decimals()); // should be a dao later.
+        Ownable.transferOwnership(_auctionHost);
     }
 
     /**
